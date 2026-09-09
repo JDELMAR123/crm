@@ -63,20 +63,32 @@ function parseJsonArray<T>(raw: string, fallback: T[]): T[] {
   }
 }
 
+type SettingsRow = Awaited<ReturnType<typeof prisma.settings.findUnique>>;
+
+// Caché en memoria de la instancia: los ajustes se leen en cada página pero se
+// escriben raras veces. Ventana corta; se invalida al guardar.
+let rowCache: { row: NonNullable<SettingsRow>; at: number } | null = null;
+const ROW_TTL_MS = 15_000;
+
 /** Devuelve el registro de ajustes, creándolo con valores por defecto si no existe. */
-async function loadRow() {
-  return prisma.settings.upsert({
-    where: { id: "singleton" },
-    update: {},
-    create: {
-      id: "singleton",
-      businessName: DEFAULT_BUSINESS_NAME,
-      aiModel: DEFAULT_AI_MODEL,
-      aiBusinessContext: DEFAULT_BUSINESS_CONTEXT,
-      productCatalog: JSON.stringify(DEFAULT_PRODUCT_CATALOG),
-      colorWords: JSON.stringify(DEFAULT_COLOR_WORDS),
-    },
-  });
+async function loadRow(): Promise<NonNullable<SettingsRow>> {
+  if (rowCache && Date.now() - rowCache.at < ROW_TTL_MS) return rowCache.row;
+
+  let row = await prisma.settings.findUnique({ where: { id: "singleton" } });
+  if (!row) {
+    row = await prisma.settings.create({
+      data: {
+        id: "singleton",
+        businessName: DEFAULT_BUSINESS_NAME,
+        aiModel: DEFAULT_AI_MODEL,
+        aiBusinessContext: DEFAULT_BUSINESS_CONTEXT,
+        productCatalog: JSON.stringify(DEFAULT_PRODUCT_CATALOG),
+        colorWords: JSON.stringify(DEFAULT_COLOR_WORDS),
+      },
+    });
+  }
+  rowCache = { row, at: Date.now() };
+  return row;
 }
 
 /**
@@ -146,5 +158,7 @@ export async function updateSettings(
   data: Parameters<typeof prisma.settings.update>[0]["data"]
 ) {
   await loadRow();
-  return prisma.settings.update({ where: { id: "singleton" }, data });
+  const row = await prisma.settings.update({ where: { id: "singleton" }, data });
+  rowCache = { row, at: Date.now() }; // refrescar la caché con lo recién guardado
+  return row;
 }
