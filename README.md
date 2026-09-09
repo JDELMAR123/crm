@@ -41,7 +41,9 @@ Guía detallada sin terminal: **[docs/INSTALACION.md](docs/INSTALACION.md)**.
 - **Contactos**: alta, búsqueda, ficha, edición.
 - **Acceso y equipo**: login propio (email + contraseña, sesiones en base de
   datos, sin servicios externos), roles admin / agente, asistente de primer uso.
-- **Ajustes en la app**: negocio, IA, catálogo de productos y credenciales de
+- **Marca blanca**: cada instalación pone su nombre, su **logo** y su **color**
+  desde Ajustes; se aplican a toda la interfaz y a la pantalla de acceso.
+- **Ajustes en la app**: marca, IA, catálogo de productos y credenciales de
   Meta — todo se configura sin tocar código.
 
 Los canales de WhatsApp/Instagram requieren una app de Meta: ver
