@@ -61,7 +61,7 @@ Variables de entorno (todas **opcionales** — lo de Ajustes tiene prioridad):
 | Variable | Para qué |
 | --- | --- |
 | `DATABASE_URL` | Conexión a PostgreSQL (la pone la integración de Neon) |
-| `AI_PROVIDER`, `ANTHROPIC_API_KEY`, `ANTHROPIC_MODEL` | IA avanzada por entorno — ver [docs/IA_AVANZADA.md](docs/IA_AVANZADA.md) |
+| IA avanzada | Se configura desde Ajustes — ver [docs/IA_AVANZADA.md](docs/IA_AVANZADA.md) |
 | `META_*` | Credenciales de WhatsApp/Instagram por entorno |
 | `CREATOR_EMAIL` + `CREATOR_PASSWORD` | Habilita el panel `/creador` (diagnóstico y control de la instalación) para ese correo |
 
@@ -107,7 +107,7 @@ src/lib/auth/               Sesiones, contraseñas, guardas
 src/lib/settings/           Configuración de la instalación
 src/lib/creator/            Acceso de creador
 src/lib/channels/           Adaptadores de canal
-src/lib/ai/                 Motor de sectorización (simulation | anthropic)
+src/lib/ai/                 Motor de sectorización (IA básica | IA avanzada)
 src/lib/actions/            Server Actions
 ```
 
