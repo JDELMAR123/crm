@@ -39,6 +39,13 @@ propia configuración. No depende de ninguna otra instalación.
 Esto añade solo las variables de conexión (`DATABASE_URL`, etc.). No tienes
 que copiar ninguna cadena a mano.
 
+> **Importante — rendimiento**: el archivo `vercel.json` fija la región de las
+> funciones en `fra1` (Frankfurt) para que estén **junto a la base de datos**.
+> Si creas la base de datos en otra región de Neon, cambia ese valor por la
+> región de Vercel equivalente (`iad1` para US East, `sfo1` para US West,
+> `gru1` para Sudamérica…) antes de desplegar. Base de datos y funciones en
+> regiones distintas = el CRM va lento.
+
 ## Paso 4 — Variable del creador (opcional pero recomendado)
 
 En **Environment Variables** añade:
