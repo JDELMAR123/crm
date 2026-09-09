@@ -1,0 +1,158 @@
+// CRM schema — learn more: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum LeadStage {
+  NUEVO
+  INTERESADO
+  EN_PROCESO_DE_COMPRA
+  CLIENTE
+  PERDIDO
+}
+
+enum ChannelType {
+  WHATSAPP
+  INSTAGRAM
+  SIMULADOR
+}
+
+enum MessageDirection {
+  ENTRANTE
+  SALIENTE
+}
+
+enum UserRole {
+  ADMIN
+  AGENTE
+}
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  name         String
+  passwordHash String
+  role         UserRole  @default(AGENTE)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  sessions     Session[]
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+/// Configuración de la instalación. Fila única (id = "singleton").
+model Settings {
+  id String @id @default("singleton")
+
+  businessName String @default("Mi CRM")
+
+  // IA
+  aiProvider        String  @default("simulation") // "simulation" | "anthropic"
+  aiApiKey          String?
+  aiModel           String  @default("claude-opus-5")
+  aiBusinessContext String  @default("")
+
+  // Motor de simulación (JSON en texto)
+  productCatalog String @default("[]")
+  colorWords     String @default("[]")
+
+  // Canales de Meta
+  metaVerifyToken   String?
+  waToken           String?
+  waPhoneId         String?
+  igToken           String?
+  igAccountId       String?
+
+  // Control del creador
+  disabledModules String  @default("[]") // JSON: ["inbox","pipeline","ia"]
+  creatorNotice   String? // aviso mostrado dentro del CRM a todos los usuarios
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Contact {
+  id        String  @id @default(cuid())
+  firstName String
+  lastName  String?
+  email     String? @unique
+  phone     String?
+  company   String?
+  notes     String?
+
+  // Datos de canales de mensajería
+  whatsappId  String? @unique
+  instagramId String? @unique
+
+  // Sectorización con IA (resumen a nivel de contacto)
+  stage         LeadStage @default(NUEVO)
+  interestScore Int?
+  aiSummary     String?
+  aiDesired     String?
+  aiNextStep    String?
+  aiAnalyzedAt  DateTime?
+
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  conversations Conversation[]
+
+  @@index([company])
+  @@index([stage])
+}
+
+model Conversation {
+  id         String      @id @default(cuid())
+  channel    ChannelType
+  externalId String
+  contactId  String
+  contact    Contact     @relation(fields: [contactId], references: [id], onDelete: Cascade)
+
+  lastMessageAt      DateTime @default(now())
+  lastMessagePreview String?
+  unread             Boolean  @default(true)
+
+  // Análisis de IA de esta conversación
+  aiStage      LeadStage?
+  aiInterest   Int?
+  aiDesired    String?
+  aiSentiment  String?
+  aiSignals    String? // JSON: presupuesto, urgencia, objeciones
+  aiSummary    String?
+  aiNextStep   String?
+  aiDraftReply String?
+  aiAnalyzedAt DateTime?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  messages  Message[]
+
+  @@unique([channel, externalId])
+  @@index([lastMessageAt])
+}
+
+model Message {
+  id             String           @id @default(cuid())
+  conversationId String
+  conversation   Conversation     @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  direction      MessageDirection
+  body           String
+  externalId     String?          @unique
+  createdAt      DateTime         @default(now())
+
+  @@index([conversationId, createdAt])
+}
