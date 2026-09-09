@@ -59,7 +59,9 @@ model Session {
 model Settings {
   id String @id @default("singleton")
 
-  businessName String @default("Mi CRM")
+  businessName String  @default("Mi CRM")
+  logo         String? // data URI (data:image/...;base64,...)
+  brandColor   String? // hex, p. ej. "#4f46e5"
 
   // IA
   aiProvider        String  @default("simulation") // "simulation" | "anthropic"

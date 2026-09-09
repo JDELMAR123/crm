@@ -19,14 +19,41 @@ function secret(formData: FormData, name: string): string | null | undefined {
   return v ? v : undefined;
 }
 
-export async function saveBusiness(
+const LOGO_TYPES = ["image/png", "image/jpeg", "image/webp", "image/svg+xml", "image/gif"];
+const LOGO_MAX = 256 * 1024;
+
+export async function saveBrand(
   _prev: SettingsState,
   formData: FormData
 ): Promise<SettingsState> {
   await requireAdmin();
+
   const businessName = String(formData.get("businessName") ?? "").trim();
   if (!businessName) return { error: "El nombre no puede estar vacío." };
-  await updateSettings({ businessName });
+
+  const colorRaw = String(formData.get("brandColor") ?? "").trim();
+  const brandColor =
+    formData.get("brandColor__off") === "on" || !/^#[0-9a-fA-F]{6}$/.test(colorRaw)
+      ? null
+      : colorRaw.toLowerCase();
+
+  const data: Parameters<typeof updateSettings>[0] = { businessName, brandColor };
+
+  if (formData.get("logo__clear") === "on") {
+    data.logo = null;
+  } else {
+    const file = formData.get("logo");
+    if (file instanceof File && file.size > 0) {
+      if (file.size > LOGO_MAX) return { error: "El logo no puede superar 256 KB." };
+      if (!LOGO_TYPES.includes(file.type)) {
+        return { error: "Formato no admitido. Usa PNG, JPG, WEBP o SVG." };
+      }
+      const b64 = Buffer.from(await file.arrayBuffer()).toString("base64");
+      data.logo = `data:${file.type};base64,${b64}`;
+    }
+  }
+
+  await updateSettings(data);
   revalidateAll();
   return { ok: true };
 }

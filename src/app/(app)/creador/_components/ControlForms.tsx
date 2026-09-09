@@ -43,7 +43,7 @@ export function ModulesForm({ disabled }: { disabled: string[] }) {
       <div className="flex items-center gap-3">
         <button
           disabled={pending}
-          className="rounded-md bg-foreground px-4 py-2 text-sm text-background disabled:opacity-50"
+          className="rounded-md bg-brand px-4 py-2 text-sm text-brand-contrast disabled:opacity-50"
         >
           {pending ? "Guardando…" : "Guardar"}
         </button>
@@ -74,7 +74,7 @@ export function NoticeForm({ notice }: { notice: string | null }) {
       <div className="flex items-center gap-3">
         <button
           disabled={pending}
-          className="rounded-md bg-foreground px-4 py-2 text-sm text-background disabled:opacity-50"
+          className="rounded-md bg-brand px-4 py-2 text-sm text-brand-contrast disabled:opacity-50"
         >
           {pending ? "Guardando…" : "Guardar"}
         </button>

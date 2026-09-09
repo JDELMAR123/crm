@@ -29,9 +29,30 @@ export type ResolvedSettings = {
   };
   disabledModules: string[];
   creatorNotice: string | null;
+  branding: {
+    hasLogo: boolean;
+    /** Marca de tiempo para invalidar la caché del logo. */
+    logoVersion: number;
+    color: string | null;
+    /** Color de texto legible sobre `color`. */
+    colorContrast: string | null;
+  };
 };
 
 export type ModuleName = "inbox" | "pipeline" | "ia";
+
+/** Devuelve "#000000" o "#ffffff" según cuál contraste mejor con el color dado. */
+export function contrastColor(hex: string): string {
+  const m = /^#?([0-9a-f]{6})$/i.exec(hex.trim());
+  if (!m) return "#ffffff";
+  const n = parseInt(m[1], 16);
+  const r = (n >> 16) & 255;
+  const g = (n >> 8) & 255;
+  const b = n & 255;
+  // Luminancia relativa aproximada
+  const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  return lum > 0.6 ? "#171717" : "#ffffff";
+}
 
 function parseJsonArray<T>(raw: string, fallback: T[]): T[] {
   try {
@@ -96,8 +117,20 @@ export const getSettings = cache(async (): Promise<ResolvedSettings> => {
     },
     disabledModules: parseJsonArray<string>(row.disabledModules, []),
     creatorNotice: row.creatorNotice?.trim() || null,
+    branding: {
+      hasLogo: Boolean(row.logo),
+      logoVersion: Math.floor(row.updatedAt.getTime() / 1000),
+      color: row.brandColor || null,
+      colorContrast: row.brandColor ? contrastColor(row.brandColor) : null,
+    },
   };
 });
+
+/** Bytes del logo (data URI) para servirlo. */
+export async function getLogoDataUri(): Promise<string | null> {
+  const row = await loadRow();
+  return row.logo || null;
+}
 
 /** ¿Está activo un módulo? */
 export async function isModuleEnabled(name: ModuleName): Promise<boolean> {

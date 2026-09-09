@@ -65,7 +65,7 @@ export default async function ConversationPage({
                 className={`max-w-[80%] rounded-lg px-3 py-2 text-sm ${
                   m.direction === "ENTRANTE"
                     ? "bg-black/5 dark:bg-white/10"
-                    : "ml-auto bg-foreground text-background"
+                    : "ml-auto bg-brand text-brand-contrast"
                 }`}
               >
                 {m.body}

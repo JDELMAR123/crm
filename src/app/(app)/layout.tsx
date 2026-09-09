@@ -3,6 +3,7 @@ import { requireUser } from "@/lib/auth";
 import { ensureCreatorAccount, isCreatorEmail } from "@/lib/creator";
 import { getSettings } from "@/lib/settings";
 import { logout } from "@/lib/actions/auth";
+import { BrandMark, BrandStyle } from "@/components/Brand";
 
 export default async function AppLayout({ children }: LayoutProps<"/">) {
   await ensureCreatorAccount();
@@ -12,6 +13,7 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
 
   return (
     <>
+      <BrandStyle branding={settings.branding} />
       {settings.creatorNotice && (
         <div className="bg-amber-500/15 px-6 py-2 text-center text-sm text-amber-800 dark:text-amber-200">
           {settings.creatorNotice}
@@ -19,8 +21,8 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
       )}
       <header className="border-b border-black/10 dark:border-white/10">
         <div className="mx-auto flex max-w-5xl items-center gap-6 px-6 py-4">
-          <Link href="/" className="text-lg font-semibold">
-            {settings.businessName}
+          <Link href="/" className="flex items-center">
+            <BrandMark businessName={settings.businessName} branding={settings.branding} />
           </Link>
           <nav className="flex gap-4 text-sm">
             <Link href="/" className="opacity-70 hover:opacity-100">

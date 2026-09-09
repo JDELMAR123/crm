@@ -3,7 +3,7 @@ import { getSettingsRow } from "@/lib/settings";
 import type { CatalogEntry } from "@/lib/settings/defaults";
 import {
   saveAi,
-  saveBusiness,
+  saveBrand,
   saveCatalog,
   saveChannels,
 } from "@/lib/actions/settings";
@@ -46,9 +46,9 @@ export default async function AjustesPage() {
       </div>
 
       <SettingsSection
-        title="Negocio"
-        description="Nombre que aparece en el CRM."
-        action={saveBusiness}
+        title="Marca"
+        description="Nombre, logo y color que verá tu equipo en todo el CRM."
+        action={saveBrand}
       >
         <label className="block space-y-1 text-sm">
           <span className="font-medium">Nombre del negocio</span>
@@ -58,6 +58,52 @@ export default async function AjustesPage() {
             className={inputClass}
           />
         </label>
+
+        <div className="space-y-1 text-sm">
+          <span className="font-medium">Logo</span>
+          <span className="block text-xs opacity-60">
+            PNG, JPG, WEBP o SVG. Máx. 256 KB. Se muestra en la cabecera y en la
+            pantalla de acceso. Si no pones logo, se usa el nombre.
+          </span>
+          {s.logo && (
+            <div className="flex items-center gap-3 py-1">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/api/logo" alt="Logo actual" className="h-8 w-auto object-contain" />
+              <label className="flex items-center gap-1 text-xs opacity-70">
+                <input type="checkbox" name="logo__clear" /> Quitar logo
+              </label>
+            </div>
+          )}
+          <input
+            type="file"
+            name="logo"
+            accept="image/png,image/jpeg,image/webp,image/svg+xml"
+            className="block text-sm file:mr-3 file:rounded-md file:border file:border-black/15 file:bg-transparent file:px-3 file:py-1.5 file:text-sm dark:file:border-white/20"
+          />
+        </div>
+
+        <div className="space-y-1 text-sm">
+          <span className="font-medium">Color de marca</span>
+          <span className="block text-xs opacity-60">
+            Se aplica a botones y detalles. Deja marcado &quot;sin color&quot; para el aspecto neutro.
+          </span>
+          <div className="flex items-center gap-3">
+            <input
+              type="color"
+              name="brandColor"
+              defaultValue={s.brandColor ?? "#4f46e5"}
+              className="h-9 w-14 cursor-pointer rounded border border-black/15 bg-transparent dark:border-white/20"
+            />
+            <label className="flex items-center gap-1 text-xs opacity-70">
+              <input
+                type="checkbox"
+                name="brandColor__off"
+                defaultChecked={!s.brandColor}
+              />{" "}
+              Sin color de marca
+            </label>
+          </div>
+        </div>
       </SettingsSection>
 
       <SettingsSection

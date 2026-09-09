@@ -21,6 +21,7 @@ export default function SettingsSection({
   return (
     <form
       action={formAction}
+      encType="multipart/form-data"
       className="space-y-4 rounded-lg border border-black/10 p-5 dark:border-white/10"
     >
       <div>
@@ -34,7 +35,7 @@ export default function SettingsSection({
         <button
           type="submit"
           disabled={pending}
-          className="rounded-md bg-foreground px-4 py-2 text-sm text-background disabled:opacity-50"
+          className="rounded-md bg-brand px-4 py-2 text-sm text-brand-contrast disabled:opacity-50"
         >
           {pending ? "Guardando…" : "Guardar"}
         </button>

@@ -66,7 +66,7 @@ export default function ReplyBox({
         <button
           onClick={submit}
           disabled={pending || !text.trim()}
-          className="shrink-0 rounded-md bg-foreground px-4 py-2 text-sm text-background disabled:opacity-50"
+          className="shrink-0 rounded-md bg-brand px-4 py-2 text-sm text-brand-contrast disabled:opacity-50"
         >
           {pending ? "…" : "Enviar"}
         </button>

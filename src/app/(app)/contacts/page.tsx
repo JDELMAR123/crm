@@ -32,7 +32,7 @@ export default async function ContactsPage({
         <h1 className="text-2xl font-semibold">Contactos</h1>
         <Link
           href="/contacts/new"
-          className="rounded-md bg-foreground px-3 py-1.5 text-sm text-background"
+          className="rounded-md bg-brand px-3 py-1.5 text-sm text-brand-contrast"
         >
           Nuevo contacto
         </Link>

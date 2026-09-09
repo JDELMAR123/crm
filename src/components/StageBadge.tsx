@@ -25,7 +25,7 @@ export function InterestBar({ score }: { score?: number | null }) {
     <span className="inline-flex items-center gap-2 text-xs opacity-70">
       <span className="h-1.5 w-16 overflow-hidden rounded-full bg-black/10 dark:bg-white/15">
         <span
-          className="block h-full rounded-full bg-foreground"
+          className="block h-full rounded-full bg-brand"
           style={{ width: `${v}%` }}
         />
       </span>
