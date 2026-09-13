@@ -18,7 +18,7 @@ const hashToken = (raw: string) =>
  * datos en cada clic.
  */
 const sessionCache = new Map<string, { user: User | null; at: number }>();
-const SESSION_TTL_MS = 15_000;
+const SESSION_TTL_MS = 60_000;
 
 function cacheGet(hash: string): User | null | undefined {
   const hit = sessionCache.get(hash);

@@ -65,7 +65,7 @@ type SettingsRow = Awaited<ReturnType<typeof prisma.settings.findUnique>>;
 // Caché en memoria de la instancia: los ajustes se leen en cada página pero se
 // escriben raras veces. Ventana corta; se invalida al guardar.
 let rowCache: { row: NonNullable<SettingsRow>; at: number } | null = null;
-const ROW_TTL_MS = 15_000;
+const ROW_TTL_MS = 60_000;
 
 /** Devuelve el registro de ajustes, creándolo con valores por defecto si no existe. */
 async function loadRow(): Promise<NonNullable<SettingsRow>> {

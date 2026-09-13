@@ -8,8 +8,11 @@ import NavLinks, { type NavItem } from "@/components/NavLinks";
 import PageTransition from "@/components/PageTransition";
 
 export default async function AppLayout({ children }: LayoutProps<"/">) {
-  await ensureCreatorAccount();
-  const [user, settings] = await Promise.all([requireUser(), getSettings()]);
+  const [user, settings] = await Promise.all([
+    requireUser(),
+    getSettings(),
+    ensureCreatorAccount(),
+  ]);
   const off = settings.disabledModules;
   const isCreator = isCreatorEmail(user.email);
 
