@@ -1,4 +1,4 @@
-import type { CatalogEntry } from "@/lib/products";
+import type { CatalogEntry, ProductInfo } from "@/lib/products";
 import type { AnalysisInput, ConversationAnalysis } from "./schema";
 
 /**
@@ -21,11 +21,21 @@ const norm = (s: string) =>
 const anyOf = (text: string, words: string[]) =>
   words.some((w) => text.includes(norm(w)));
 
-function detectProduct(text: string, catalog: CatalogEntry[]): string {
+// Busca primero en el último mensaje (lo que el cliente quiere AHORA) y solo
+// si no hay nada ahí, en el resto de la conversación — así una consulta
+// posterior por otro producto no se queda "pegada" a la primera mención.
+function detectProduct(lastText: string, fullText: string, catalog: CatalogEntry[]): string {
   for (const p of catalog) {
-    if (p.keywords.some((k) => text.includes(norm(k)))) return p.name;
+    if (p.keywords.some((k) => lastText.includes(norm(k)))) return p.name;
+  }
+  for (const p of catalog) {
+    if (p.keywords.some((k) => fullText.includes(norm(k)))) return p.name;
   }
   return "";
+}
+
+function formatPrice(n: number): string {
+  return Number.isInteger(n) ? String(n) : n.toFixed(2);
 }
 
 function detectSize(text: string): string {
@@ -64,10 +74,20 @@ export function analyzeWithSimulation(input: AnalysisInput): ConversationAnalysi
   const lastHas = (...w: string[]) => anyOf(lastText, w);
 
   // --- Entidades ---------------------------------------------------------
-  const product = detectProduct(allText, input.catalog);
+  const product = detectProduct(lastText, allText, input.catalog);
   const size = detectSize(allText);
   const color = detectColor(allText, input.colorWords);
   const quantity = detectQuantity(allText);
+
+  // El producto real (precio, descripción) si está dado de alta en Productos.
+  const productInfo: ProductInfo | undefined = product
+    ? input.products.find((p) => p.name === product)
+    : undefined;
+  const priceText = productInfo?.price != null ? formatPrice(productInfo.price) : "";
+  const totalText =
+    productInfo?.price != null && quantity > 1
+      ? formatPrice(productInfo.price * quantity)
+      : "";
 
   // --- Tipo de preguntas -----------------------------------------------
   const asksPrice = has("precio", "cuanto cuesta", "cuanto vale", "cuanto es", "que precio", "€", "euros", "cuestan");
@@ -185,8 +205,10 @@ export function analyzeWithSimulation(input: AnalysisInput): ConversationAnalysi
   const variant = [size && `talla ${size}`, color].filter(Boolean).join(", ");
   const nextStep = {
     NUEVO: `Preguntar qué ${product ? prod : "artículo"} busca (modelo, talla, color) y ofrecer ayuda.`,
-    INTERESADO: `Enviar precio y disponibilidad de ${prod}. Pedir talla y color para poder cerrar.`,
-    EN_PROCESO_DE_COMPRA: `Confirmar ${prod}${variant ? ` (${variant})` : ""}, pedir dirección de envío y mandar el enlace de pago.`,
+    INTERESADO: `Enviar precio${priceText ? ` (${priceText})` : ""} y disponibilidad de ${prod}. Pedir talla y color para poder cerrar.`,
+    EN_PROCESO_DE_COMPRA: `Confirmar ${prod}${variant ? ` (${variant})` : ""}${
+      totalText ? `, total ${totalText}` : priceText ? `, precio ${priceText}` : ""
+    }, pedir dirección de envío y mandar el enlace de pago.`,
     CLIENTE: "Confirmar que el pedido va en camino y ofrecer productos que combinen.",
     PERDIDO: "Anotar el motivo y guardar el contacto para una campaña de recuperación.",
   }[stage];
@@ -199,18 +221,24 @@ export function analyzeWithSimulation(input: AnalysisInput): ConversationAnalysi
   } else if (stage === "CLIENTE") {
     draftReply = `¡Gracias por tu compra, ${name}! En cuanto salga te paso el seguimiento. Si necesitas algo más con ${prod}, dímelo.`;
   } else if (stage === "EN_PROCESO_DE_COMPRA") {
+    const costNote = totalText
+      ? ` Son ${totalText} en total.`
+      : priceText
+        ? ` Son ${priceText}.`
+        : "";
     draftReply =
       `¡Hola ${name}! Genial 🙌 Te preparo el pedido${product ? ` de ${prod}` : ""}${
         variant ? ` (${variant})` : ""
-      }. ¿Me confirmas la dirección de envío? Te paso el enlace de pago y, si lo confirmas hoy, lo enviamos hoy mismo.`;
+      }.${costNote} ¿Me confirmas la dirección de envío? Te paso el enlace de pago y, si lo confirmas hoy, lo enviamos hoy mismo.`;
   } else if (asksShipping) {
     draftReply = `¡Hola ${name}! Te confirmo plazos y gastos de envío ahora mismo. ¿Quieres que te reserve ${prod}${
       variant ? ` (${variant})` : ""
     } mientras tanto?`;
   } else if (asksPrice || asksStock || asksSizing) {
+    const priceNote = asksPrice && priceText ? ` El precio es ${priceText}.` : "";
     draftReply = `¡Hola ${name}! Ahora te digo ${
       asksPrice ? "el precio y la disponibilidad" : "la disponibilidad"
-    } de ${prod}.${size || color ? "" : " ¿Qué talla y color necesitas?"} Así te lo confirmo al momento.`;
+    } de ${prod}.${priceNote}${size || color ? "" : " ¿Qué talla y color necesitas?"} Así te lo confirmo al momento.`;
   } else {
     draftReply = `¡Hola ${name}! Gracias por escribirnos. Cuéntame qué ${
       product ? prod : "artículo"

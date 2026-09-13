@@ -3,7 +3,7 @@ import type { NextRequest } from "next/server";
 
 // Comprobación "optimista": solo mira si existe la cookie de sesión.
 // La validación real (contra la base de datos) la hace el layout protegido.
-const PUBLIC_PREFIXES = ["/login", "/setup"];
+const PUBLIC_PREFIXES = ["/login", "/setup", "/licencia"];
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;

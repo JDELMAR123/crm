@@ -41,7 +41,21 @@ export async function analyzeWithClaude(
     model: opts.model,
     max_tokens: 4000,
     thinking: { type: "adaptive" },
-    system: `Eres un analista de ventas. Clasificas conversaciones de clientes para el CRM de un negocio, cuyo rubro puede variar (no asumas que es una tienda de ropa u otro nicho concreto salvo que el contexto o el catálogo lo indiquen).\n\nContexto del negocio:\n${input.businessContext}\n\nCatálogo de productos/servicios configurado:\n${catalogBlock}\n\nDevuelve SIEMPRE el análisis en el formato estructurado pedido. Usa el catálogo para identificar qué quiere el cliente cuando sea posible. Sé conciso y realista con el nivel de interés.`,
+    system: `Eres un analista de ventas. Clasificas conversaciones de clientes para el CRM de un negocio, cuyo rubro puede variar (no asumas que es una tienda de ropa u otro nicho concreto salvo que el contexto o el catálogo lo indiquen).
+
+Contexto del negocio:
+${input.businessContext}
+
+Catálogo de productos/servicios configurado:
+${catalogBlock}
+
+Reglas:
+- Usa el catálogo para identificar qué quiere el cliente. Si menciona algo que no está en el catálogo, dilo tal cual en "desired" pero no inventes un precio ni lo confundas con un producto listado.
+- Si el cliente cambia de tema (pregunta por otro producto más adelante en la conversación), prioriza lo último que pidió sobre lo que mencionó al principio.
+- Cuando el precio de un producto esté en el catálogo, menciónalo de forma explícita y correcta en "nextStep" y en "draftReply" (calcula el total si pide más de una unidad); no des precios que no estén en el catálogo.
+- Sé conciso y realista con el nivel de interés: no asumas intención de compra alta solo por preguntar precio o disponibilidad.
+
+Devuelve SIEMPRE el análisis en el formato estructurado pedido.`,
     messages: [
       {
         role: "user",

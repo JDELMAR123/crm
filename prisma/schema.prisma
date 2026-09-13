@@ -83,8 +83,29 @@ model Settings {
   disabledModules String  @default("[]") // JSON: ["inbox","pipeline","ia"]
   creatorNotice   String? // aviso mostrado dentro del CRM a todos los usuarios
 
+  // Licencia: cobro previo a permitir el primer uso (/setup) de esta instalación.
+  licenseEnabled             Boolean @default(false)
+  licensePaid                Boolean @default(false)
+  licensePriceLabel          String? // texto libre, p. ej. "$49 USD"
+  licensePaymentInstructions String? // métodos de pago (Zelle, Binance, pago móvil, etc.)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+/// Comprobante de pago enviado por un comprador para desbloquear la instalación.
+/// Lo revisa el creador manualmente desde /creador.
+model LicensePaymentClaim {
+  id          String    @id @default(cuid())
+  reference   String // referencia/comprobante que escribe el comprador
+  method      String? // p. ej. "Zelle", "Binance", "Pago móvil"
+  contactInfo String? // email o teléfono para responderle
+  status      String    @default("pending") // pending | approved | rejected
+  note        String? // nota del creador (p. ej. motivo de rechazo)
+  createdAt   DateTime  @default(now())
+  reviewedAt  DateTime?
+
+  @@index([status])
 }
 
 /// Producto o servicio del catálogo del negocio. La IA se apoya en estos

@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { hasAnyUser } from "@/lib/auth";
 import { ensureCreatorAccount } from "@/lib/creator";
+import { getSettings } from "@/lib/settings";
 import { setupAdmin } from "@/lib/actions/auth";
 import AuthForm from "../_components/AuthForm";
 
@@ -9,6 +10,7 @@ export const dynamic = "force-dynamic";
 export default async function SetupPage() {
   await ensureCreatorAccount();
   if (await hasAnyUser()) redirect("/login");
+  if ((await getSettings()).license.locked) redirect("/licencia");
 
   return (
     <div className="space-y-6">

@@ -26,6 +26,14 @@ export type ResolvedSettings = {
   };
   disabledModules: string[];
   creatorNotice: string | null;
+  license: {
+    enabled: boolean;
+    paid: boolean;
+    /** enabled && !paid: hay que pagar antes de dejar usar /setup. */
+    locked: boolean;
+    priceLabel: string | null;
+    instructions: string | null;
+  };
   branding: {
     hasLogo: boolean;
     /** Marca de tiempo para invalidar la caché del logo. */
@@ -124,6 +132,13 @@ export const getSettings = cache(async (): Promise<ResolvedSettings> => {
     },
     disabledModules: parseJsonArray<string>(row.disabledModules, []),
     creatorNotice: row.creatorNotice?.trim() || null,
+    license: {
+      enabled: row.licenseEnabled,
+      paid: row.licensePaid,
+      locked: row.licenseEnabled && !row.licensePaid,
+      priceLabel: row.licensePriceLabel?.trim() || null,
+      instructions: row.licensePaymentInstructions?.trim() || null,
+    },
     branding: {
       hasLogo: Boolean(row.logo),
       logoVersion: Math.floor(row.updatedAt.getTime() / 1000),

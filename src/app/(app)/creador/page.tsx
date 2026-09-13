@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getSettings, getSettingsRow } from "@/lib/settings";
 import { APP_VERSION } from "@/lib/version";
 import { ModulesForm, NoticeForm } from "./_components/ControlForms";
+import { LicenseConfigForm, LicenseClaimsList } from "./_components/LicenseForms";
 
 export const dynamic = "force-dynamic";
 
@@ -21,7 +22,7 @@ function Row({ label, value, ok }: { label: string; value: string; ok?: boolean 
 export default async function CreadorPage() {
   await requireCreator();
 
-  const [settings, row, counts, migrations, host] = await Promise.all([
+  const [settings, row, counts, migrations, host, claims] = await Promise.all([
     getSettings(),
     getSettingsRow(),
     Promise.all([
@@ -35,6 +36,7 @@ export default async function CreadorPage() {
       .then((r) => Number(r[0]?.count ?? 0))
       .catch(() => -1),
     headers().then((h) => h.get("host") ?? "desconocido"),
+    prisma.licensePaymentClaim.findMany({ orderBy: { createdAt: "desc" }, take: 20 }),
   ]);
 
   const [users, contacts, conversations, messages] = counts;
@@ -116,6 +118,16 @@ export default async function CreadorPage() {
           ))}
         </div>
       </section>
+
+      <LicenseConfigForm
+        enabled={settings.license.enabled}
+        paid={settings.license.paid}
+        priceLabel={settings.license.priceLabel}
+        instructions={settings.license.instructions}
+      />
+      {settings.license.enabled && !settings.license.paid && (
+        <LicenseClaimsList claims={claims} />
+      )}
 
       <ModulesForm disabled={settings.disabledModules} />
       <NoticeForm notice={settings.creatorNotice} />
