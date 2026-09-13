@@ -4,12 +4,28 @@ import { ensureCreatorAccount, isCreatorEmail } from "@/lib/creator";
 import { getSettings } from "@/lib/settings";
 import { logout } from "@/lib/actions/auth";
 import { BrandMark, BrandStyle } from "@/components/Brand";
+import NavLinks, { type NavItem } from "@/components/NavLinks";
+import PageTransition from "@/components/PageTransition";
 
 export default async function AppLayout({ children }: LayoutProps<"/">) {
   await ensureCreatorAccount();
   const [user, settings] = await Promise.all([requireUser(), getSettings()]);
   const off = settings.disabledModules;
   const isCreator = isCreatorEmail(user.email);
+
+  const navItems: NavItem[] = [
+    { href: "/", label: "Inicio" },
+    ...(!off.includes("inbox") ? [{ href: "/inbox", label: "Bandeja" }] : []),
+    ...(!off.includes("pipeline") ? [{ href: "/pipeline", label: "Pipeline" }] : []),
+    { href: "/contacts", label: "Contactos" },
+    ...(user.role === "ADMIN"
+      ? [
+          { href: "/equipo", label: "Equipo" },
+          { href: "/ajustes", label: "Ajustes" },
+        ]
+      : []),
+    ...(isCreator ? [{ href: "/creador", label: "Creador", special: true }] : []),
+  ];
 
   return (
     <>
@@ -24,39 +40,7 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
           <Link href="/" className="flex items-center">
             <BrandMark businessName={settings.businessName} branding={settings.branding} />
           </Link>
-          <nav className="flex gap-4 text-sm">
-            <Link href="/" className="opacity-70 hover:opacity-100">
-              Inicio
-            </Link>
-            {!off.includes("inbox") && (
-              <Link href="/inbox" className="opacity-70 hover:opacity-100">
-                Bandeja
-              </Link>
-            )}
-            {!off.includes("pipeline") && (
-              <Link href="/pipeline" className="opacity-70 hover:opacity-100">
-                Pipeline
-              </Link>
-            )}
-            <Link href="/contacts" className="opacity-70 hover:opacity-100">
-              Contactos
-            </Link>
-            {user.role === "ADMIN" && (
-              <>
-                <Link href="/equipo" className="opacity-70 hover:opacity-100">
-                  Equipo
-                </Link>
-                <Link href="/ajustes" className="opacity-70 hover:opacity-100">
-                  Ajustes
-                </Link>
-              </>
-            )}
-            {isCreator && (
-              <Link href="/creador" className="font-medium text-blue-600 dark:text-blue-400">
-                Creador
-              </Link>
-            )}
-          </nav>
+          <NavLinks items={navItems} />
           <div className="ml-auto flex items-center gap-3 text-sm">
             <span className="opacity-60">{user.name}</span>
             <form action={logout}>
@@ -65,7 +49,9 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
           </div>
         </div>
       </header>
-      <main className="mx-auto w-full max-w-5xl flex-1 px-6 py-8">{children}</main>
+      <main className="mx-auto w-full max-w-5xl flex-1 px-6 py-8">
+        <PageTransition>{children}</PageTransition>
+      </main>
     </>
   );
 }
