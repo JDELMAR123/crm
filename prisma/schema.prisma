@@ -70,8 +70,7 @@ model Settings {
   aiBusinessContext String  @default("")
 
   // Motor de simulación (JSON en texto)
-  productCatalog String @default("[]")
-  colorWords     String @default("[]")
+  colorWords String @default("[]")
 
   // Canales de Meta
   metaVerifyToken   String?
@@ -86,6 +85,24 @@ model Settings {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+/// Producto o servicio del catálogo del negocio. La IA se apoya en estos
+/// datos para entender qué vende el negocio (varía según el nicho).
+model Product {
+  id          String   @id @default(cuid())
+  name        String
+  category    String?
+  description String?
+  price       Float?
+  sku         String?
+  keywords    String   @default("[]") // JSON: sinónimos/variantes para detectarlo en texto
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([category])
+  @@index([active])
 }
 
 model Contact {

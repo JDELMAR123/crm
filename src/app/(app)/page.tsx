@@ -2,29 +2,35 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { LEAD_STAGES, STAGE_LABEL } from "@/lib/ai/schema";
 import { getSettings } from "@/lib/settings";
-import {
-  DEFAULT_BUSINESS_NAME,
-  DEFAULT_PRODUCT_CATALOG,
-} from "@/lib/settings/defaults";
+import { DEFAULT_BUSINESS_NAME } from "@/lib/settings/defaults";
 import OnboardingChecklist from "./_components/OnboardingChecklist";
 
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const [total, unread, byStage, topLeads, settings, userCount, messageCount] =
-    await Promise.all([
-      prisma.contact.count(),
-      prisma.conversation.count({ where: { unread: true } }),
-      prisma.contact.groupBy({ by: ["stage"], _count: true }),
-      prisma.contact.findMany({
-        where: { interestScore: { not: null } },
-        orderBy: { interestScore: "desc" },
-        take: 5,
-      }),
-      getSettings(),
-      prisma.user.count(),
-      prisma.message.count(),
-    ]);
+  const [
+    total,
+    unread,
+    byStage,
+    topLeads,
+    settings,
+    userCount,
+    messageCount,
+    productCount,
+  ] = await Promise.all([
+    prisma.contact.count(),
+    prisma.conversation.count({ where: { unread: true } }),
+    prisma.contact.groupBy({ by: ["stage"], _count: true }),
+    prisma.contact.findMany({
+      where: { interestScore: { not: null } },
+      orderBy: { interestScore: "desc" },
+      take: 5,
+    }),
+    getSettings(),
+    prisma.user.count(),
+    prisma.message.count(),
+    prisma.product.count(),
+  ]);
 
   const stageCount = (s: string) =>
     byStage.find((g) => g.stage === s)?._count ?? 0;
@@ -36,11 +42,9 @@ export default async function HomePage() {
       done: settings.businessName !== DEFAULT_BUSINESS_NAME,
     },
     {
-      label: "Revisa tu catálogo de productos",
-      href: "/ajustes",
-      done:
-        JSON.stringify(settings.catalog) !==
-        JSON.stringify(DEFAULT_PRODUCT_CATALOG),
+      label: "Añade tus productos o servicios",
+      href: "/productos",
+      done: productCount > 0,
     },
     {
       label: "Prueba la bandeja (simula un mensaje o conecta un canal)",

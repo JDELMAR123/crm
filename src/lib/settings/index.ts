@@ -6,8 +6,6 @@ import {
   DEFAULT_BUSINESS_CONTEXT,
   DEFAULT_BUSINESS_NAME,
   DEFAULT_COLOR_WORDS,
-  DEFAULT_PRODUCT_CATALOG,
-  type CatalogEntry,
 } from "./defaults";
 
 export type ResolvedSettings = {
@@ -20,7 +18,6 @@ export type ResolvedSettings = {
     /** Proveedor elegido en los ajustes, aunque falte la clave. */
     configuredProvider: "simulation" | "anthropic";
   };
-  catalog: CatalogEntry[];
   colorWords: string[];
   channels: {
     verifyToken: string | null;
@@ -82,7 +79,6 @@ async function loadRow(): Promise<NonNullable<SettingsRow>> {
         businessName: DEFAULT_BUSINESS_NAME,
         aiModel: DEFAULT_AI_MODEL,
         aiBusinessContext: DEFAULT_BUSINESS_CONTEXT,
-        productCatalog: JSON.stringify(DEFAULT_PRODUCT_CATALOG),
         colorWords: JSON.stringify(DEFAULT_COLOR_WORDS),
       },
     });
@@ -120,7 +116,6 @@ export const getSettings = cache(async (): Promise<ResolvedSettings> => {
       model: row.aiModel || process.env.ANTHROPIC_MODEL || DEFAULT_AI_MODEL,
       businessContext: row.aiBusinessContext?.trim() || DEFAULT_BUSINESS_CONTEXT,
     },
-    catalog: parseJsonArray<CatalogEntry>(row.productCatalog, DEFAULT_PRODUCT_CATALOG),
     colorWords: parseJsonArray<string>(row.colorWords, DEFAULT_COLOR_WORDS),
     channels: {
       verifyToken,

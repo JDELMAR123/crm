@@ -89,6 +89,21 @@ const demoConversations = [
   },
 ];
 
+const demoProducts = [
+  {
+    name: "Camisetas",
+    category: "Ropa",
+    price: 19.99,
+    keywords: JSON.stringify(["camiseta", "camisetas", "playera", "remera"]),
+  },
+  {
+    name: "Zapatillas",
+    category: "Calzado",
+    price: 59.99,
+    keywords: JSON.stringify(["zapatilla", "zapatillas", "tenis", "sneakers", "deportivas"]),
+  },
+];
+
 async function main() {
   await prisma.user.upsert({
     where: { email: DEV_ADMIN.email },
@@ -100,6 +115,15 @@ async function main() {
       role: "ADMIN",
     },
   });
+
+  for (const data of demoProducts) {
+    const existing = await prisma.product.findFirst({ where: { name: data.name } });
+    if (existing) {
+      await prisma.product.update({ where: { id: existing.id }, data });
+    } else {
+      await prisma.product.create({ data });
+    }
+  }
 
   for (const data of contacts) {
     await prisma.contact.upsert({
@@ -150,7 +174,8 @@ async function main() {
 
   console.log(
     `Seed completado: admin (${DEV_ADMIN.email} / ${DEV_ADMIN.password}), ` +
-      `${contacts.length} contactos, ${demoConversations.length} conversaciones.`
+      `${demoProducts.length} productos, ${contacts.length} contactos, ` +
+      `${demoConversations.length} conversaciones.`
   );
 }
 

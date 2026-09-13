@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { CatalogEntry } from "@/lib/settings/defaults";
+import type { CatalogEntry, ProductInfo } from "@/lib/products";
 
 export const LEAD_STAGES = [
   "NUEVO",
@@ -59,6 +59,8 @@ export type AnalysisInput = {
   contactName: string;
   channel: string;
   catalog: CatalogEntry[];
+  /** Productos completos (con precio, categoría, descripción) para dar más contexto a la IA avanzada. */
+  products: ProductInfo[];
   colorWords: string[];
   businessContext: string;
 };

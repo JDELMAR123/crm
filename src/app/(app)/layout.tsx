@@ -18,6 +18,7 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
     ...(!off.includes("inbox") ? [{ href: "/inbox", label: "Bandeja" }] : []),
     ...(!off.includes("pipeline") ? [{ href: "/pipeline", label: "Pipeline" }] : []),
     { href: "/contacts", label: "Contactos" },
+    { href: "/productos", label: "Productos" },
     ...(user.role === "ADMIN"
       ? [
           { href: "/equipo", label: "Equipo" },

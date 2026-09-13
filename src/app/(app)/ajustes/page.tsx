@@ -1,10 +1,10 @@
+import Link from "next/link";
 import { requireAdmin } from "@/lib/auth";
 import { getSettingsRow } from "@/lib/settings";
-import type { CatalogEntry } from "@/lib/settings/defaults";
 import {
   saveAi,
   saveBrand,
-  saveCatalog,
+  saveColors,
   saveChannels,
 } from "@/lib/actions/settings";
 import SettingsSection, {
@@ -14,15 +14,6 @@ import SettingsSection, {
 import AiProviderChoice from "./_components/AiProviderChoice";
 
 export const dynamic = "force-dynamic";
-
-function catalogToText(raw: string): string {
-  try {
-    const list = JSON.parse(raw) as CatalogEntry[];
-    return list.map((e) => `${e.name}: ${e.keywords.join(", ")}`).join("\n");
-  } catch {
-    return "";
-  }
-}
 
 function colorsToText(raw: string): string {
   try {
@@ -135,23 +126,18 @@ export default async function AjustesPage() {
       </SettingsSection>
 
       <SettingsSection
-        title="Catálogo de productos"
-        description="Lo usa el motor de simulación para reconocer qué quiere el cliente."
-        action={saveCatalog}
+        title="Colores"
+        description="Los usa el motor de simulación para detectar variantes de producto."
+        action={saveColors}
       >
-        <label className="block space-y-1 text-sm">
-          <span className="font-medium">Productos</span>
-          <span className="block text-xs opacity-60">
-            Un producto por línea, con el formato <code>Nombre: palabra1, palabra2, …</code>
-            (todas las formas en que un cliente puede nombrarlo).
-          </span>
-          <textarea
-            name="catalog"
-            defaultValue={catalogToText(s.productCatalog)}
-            rows={9}
-            className={`${inputClass} font-mono`}
-          />
-        </label>
+        <p className="text-sm opacity-70">
+          Los productos ahora se gestionan en su propia sección:{" "}
+          <Link href="/productos" className="underline">
+            Productos
+          </Link>
+          . Ahí también defines los sinónimos con los que la IA reconoce cada
+          uno.
+        </p>
         <label className="block space-y-1 text-sm">
           <span className="font-medium">Colores</span>
           <span className="block text-xs opacity-60">Separados por comas.</span>

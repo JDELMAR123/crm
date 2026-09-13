@@ -1,4 +1,4 @@
-import type { CatalogEntry } from "@/lib/settings/defaults";
+import type { CatalogEntry } from "@/lib/products";
 import type { AnalysisInput, ConversationAnalysis } from "./schema";
 
 /**
@@ -7,8 +7,9 @@ import type { AnalysisInput, ConversationAnalysis } from "./schema";
  * tipo de pregunta e intención de compra, y con eso decide etapa, interés,
  * resumen, siguiente paso y un borrador de respuesta.
  *
- * El catálogo y los colores se editan en Ajustes. Cuando se activa la IA
- * avanzada, este archivo deja de usarse.
+ * El catálogo (nombre + sinónimos de cada producto) se gestiona en
+ * Productos y los colores en Ajustes. Cuando se activa la IA avanzada, este
+ * archivo deja de usarse.
  */
 
 const norm = (s: string) =>

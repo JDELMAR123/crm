@@ -22,11 +22,26 @@ export async function analyzeWithClaude(
     )
     .join("\n");
 
+  const catalogBlock =
+    input.products.length > 0
+      ? input.products
+          .map((p) => {
+            const parts = [
+              `- ${p.name}`,
+              p.category ? `(${p.category})` : "",
+              p.price != null ? `— ${p.price}` : "",
+              p.description ? `: ${p.description}` : "",
+            ].filter(Boolean);
+            return parts.join(" ");
+          })
+          .join("\n")
+      : "(No hay productos configurados todavía; no asumas ningún catálogo concreto.)";
+
   const response = await client.messages.parse({
     model: opts.model,
     max_tokens: 4000,
     thinking: { type: "adaptive" },
-    system: `Eres un analista de ventas de un e-commerce. Clasificas conversaciones de clientes para el CRM.\n\nContexto del negocio:\n${input.businessContext}\n\nDevuelve SIEMPRE el análisis en el formato estructurado pedido. Sé conciso y realista con el nivel de interés.`,
+    system: `Eres un analista de ventas. Clasificas conversaciones de clientes para el CRM de un negocio, cuyo rubro puede variar (no asumas que es una tienda de ropa u otro nicho concreto salvo que el contexto o el catálogo lo indiquen).\n\nContexto del negocio:\n${input.businessContext}\n\nCatálogo de productos/servicios configurado:\n${catalogBlock}\n\nDevuelve SIEMPRE el análisis en el formato estructurado pedido. Usa el catálogo para identificar qué quiere el cliente cuando sea posible. Sé conciso y realista con el nivel de interés.`,
     messages: [
       {
         role: "user",

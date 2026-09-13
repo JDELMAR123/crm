@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { getSettings } from "@/lib/settings";
+import { getActiveProducts, getCatalogEntries } from "@/lib/products";
 import { analyzeWithSimulation } from "./simulation";
 import type { AnalysisInput, ConversationAnalysis } from "./schema";
 
@@ -36,6 +37,11 @@ export async function analyzeAndPersist(conversationId: string): Promise<void> {
   const settings = await getSettings();
   if (settings.disabledModules.includes("ia")) return;
 
+  const [catalog, products] = await Promise.all([
+    getCatalogEntries(),
+    getActiveProducts(),
+  ]);
+
   const { analysis } = await analyzeConversationMessages({
     channel: conversation.channel,
     contactName: conversation.contact.firstName,
@@ -43,7 +49,8 @@ export async function analyzeAndPersist(conversationId: string): Promise<void> {
       direction: m.direction,
       body: m.body,
     })),
-    catalog: settings.catalog,
+    catalog,
+    products,
     colorWords: settings.colorWords,
     businessContext: settings.ai.businessContext,
   });
