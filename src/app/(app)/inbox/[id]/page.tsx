@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { after } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAdapter, getChannelConfig, CHANNEL_LABEL } from "@/lib/channels";
 import { getSettings } from "@/lib/settings";
@@ -24,7 +25,8 @@ export default async function ConversationPage({
   if (!conversation) notFound();
 
   if (conversation.unread) {
-    await prisma.conversation.update({ where: { id }, data: { unread: false } });
+    // No bloquea el render: se marca como leída después de responder.
+    after(() => prisma.conversation.update({ where: { id }, data: { unread: false } }));
   }
 
   const adapter = getAdapter(conversation.channel);
