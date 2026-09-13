@@ -5,6 +5,7 @@ import { ensureCreatorAccount } from "@/lib/creator";
 import { getSettings } from "@/lib/settings";
 import { getMyLicenseClaim, retryLicenseClaim } from "@/lib/actions/license";
 import LicenseClaimForm from "./_components/LicenseClaimForm";
+import LicenseKeyForm from "./_components/LicenseKeyForm";
 
 export const dynamic = "force-dynamic";
 
@@ -16,24 +17,7 @@ export default async function LicenciaPage() {
   if (!settings.license.locked) redirect("/setup");
 
   const claim = await getMyLicenseClaim();
-
-  if (claim && claim.status !== "rejected") {
-    return (
-      <div className="space-y-4 text-center">
-        <h1 className="text-xl font-semibold">Pago en revisión</h1>
-        <p className="text-sm opacity-70">
-          Recibimos tu comprobante (<span className="font-mono">{claim.reference}</span>
-          ). En cuanto lo confirmemos, esta página te dejará continuar automáticamente.
-        </p>
-        <Link
-          href="/licencia"
-          className="inline-block rounded-md border border-black/15 px-4 py-2 text-sm dark:border-white/20"
-        >
-          Actualizar estado
-        </Link>
-      </div>
-    );
-  }
+  const claimPending = claim && claim.status === "pending";
 
   return (
     <div className="space-y-6">
@@ -41,21 +25,15 @@ export default async function LicenciaPage() {
         <h1 className="text-xl font-semibold">Activa tu CRM</h1>
         <p className="text-sm opacity-70">
           Este es un paso único. Realiza el pago con alguno de los métodos de
-          abajo y envíanos el comprobante para desbloquear tu instalación.
+          abajo y te daremos una clave de licencia para desbloquear tu
+          instalación.
         </p>
       </div>
 
-      {claim?.status === "rejected" && (
-        <div className="space-y-2 rounded-md bg-red-500/10 px-3 py-2 text-sm text-red-600 dark:text-red-400">
-          <p>No pudimos validar tu comprobante anterior.</p>
-          {claim.note && <p className="opacity-90">{claim.note}</p>}
-          <form action={retryLicenseClaim}>
-            <button type="submit" className="underline">
-              Enviar otro comprobante
-            </button>
-          </form>
-        </div>
-      )}
+      <div className="space-y-2 rounded-lg border border-black/10 p-4 dark:border-white/10">
+        <div className="font-medium">¿Ya tienes tu clave de licencia?</div>
+        <LicenseKeyForm />
+      </div>
 
       {settings.license.priceLabel && (
         <div className="rounded-lg border border-black/10 p-4 text-center dark:border-white/10">
@@ -73,7 +51,40 @@ export default async function LicenciaPage() {
         </div>
       )}
 
-      {(!claim || claim.status === "rejected") && <LicenseClaimForm />}
+      <div className="space-y-3 border-t border-black/10 pt-6 dark:border-white/10">
+        <p className="text-sm opacity-70">
+          Ya pagaste pero todavía no tienes la clave? Mándanos el comprobante
+          y te la generamos.
+        </p>
+
+        {claimPending ? (
+          <div className="space-y-2 text-sm">
+            <p className="opacity-70">
+              Recibimos tu comprobante (
+              <span className="font-mono">{claim.reference}</span>). Te
+              enviaremos la clave de licencia en cuanto lo confirmemos.
+            </p>
+            <Link href="/licencia" className="underline">
+              Actualizar
+            </Link>
+          </div>
+        ) : (
+          <>
+            {claim?.status === "rejected" && (
+              <div className="space-y-2 rounded-md bg-red-500/10 px-3 py-2 text-sm text-red-600 dark:text-red-400">
+                <p>No pudimos validar tu comprobante anterior.</p>
+                {claim.note && <p className="opacity-90">{claim.note}</p>}
+                <form action={retryLicenseClaim}>
+                  <button type="submit" className="underline">
+                    Enviar otro comprobante
+                  </button>
+                </form>
+              </div>
+            )}
+            <LicenseClaimForm />
+          </>
+        )}
+      </div>
 
       <p className="text-center text-xs opacity-50">
         ¿Ya tienes una cuenta?{" "}

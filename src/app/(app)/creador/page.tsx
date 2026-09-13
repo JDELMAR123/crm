@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getSettings, getSettingsRow } from "@/lib/settings";
 import { APP_VERSION } from "@/lib/version";
 import { ModulesForm, NoticeForm } from "./_components/ControlForms";
-import { LicenseConfigForm, LicenseClaimsList } from "./_components/LicenseForms";
+import { LicenseConfigForm, LicenseKeyForm, LicenseClaimsList } from "./_components/LicenseForms";
 
 export const dynamic = "force-dynamic";
 
@@ -121,10 +121,12 @@ export default async function CreadorPage() {
 
       <LicenseConfigForm
         enabled={settings.license.enabled}
-        paid={settings.license.paid}
         priceLabel={settings.license.priceLabel}
         instructions={settings.license.instructions}
       />
+      {settings.license.enabled && (
+        <LicenseKeyForm keyLabel={settings.license.keyLabel} valid={settings.license.paid} />
+      )}
       {settings.license.enabled && !settings.license.paid && (
         <LicenseClaimsList claims={claims} />
       )}

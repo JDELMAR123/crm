@@ -3,9 +3,11 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { getSettings } from "@/lib/settings";
+import { getSettings, updateSettings } from "@/lib/settings";
+import { verifyLicenseKey } from "@/lib/license/crypto";
 
 export type LicenseClaimState = { error?: string };
+export type LicenseKeyState = { error?: string };
 
 const CLAIM_COOKIE = "crm_license_claim";
 
@@ -54,4 +56,28 @@ export async function retryLicenseClaim(): Promise<void> {
   const store = await cookies();
   store.delete(CLAIM_COOKIE);
   redirect("/licencia");
+}
+
+/**
+ * El comprador (o el creador) pega la clave de licencia que el creador le
+ * dio tras confirmar el pago. Se valida sin conexión, con la clave pública
+ * incluida en el código — no hace falta ningún servidor para desbloquear.
+ */
+export async function submitLicenseKey(
+  _prev: LicenseKeyState,
+  formData: FormData
+): Promise<LicenseKeyState> {
+  const settings = await getSettings();
+  if (!settings.license.locked) redirect("/setup");
+
+  const key = String(formData.get("licenseKey") ?? "").trim();
+  if (!key) return { error: "Pega la clave de licencia." };
+
+  const result = verifyLicenseKey(key);
+  if (!result.valid) {
+    return { error: "Esa clave no es válida. Revisa que la copiaste completa." };
+  }
+
+  await updateSettings({ licenseKey: key });
+  redirect("/setup");
 }

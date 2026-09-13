@@ -85,7 +85,7 @@ model Settings {
 
   // Licencia: cobro previo a permitir el primer uso (/setup) de esta instalación.
   licenseEnabled             Boolean @default(false)
-  licensePaid                Boolean @default(false)
+  licenseKey                 String? // clave firmada por el creador; se valida sin conexión
   licensePriceLabel          String? // texto libre, p. ej. "$49 USD"
   licensePaymentInstructions String? // métodos de pago (Zelle, Binance, pago móvil, etc.)
 

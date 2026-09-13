@@ -1,6 +1,7 @@
 import "server-only";
 import { cache } from "react";
 import { prisma } from "@/lib/prisma";
+import { verifyLicenseKey } from "@/lib/license/crypto";
 import {
   DEFAULT_AI_MODEL,
   DEFAULT_BUSINESS_CONTEXT,
@@ -28,11 +29,16 @@ export type ResolvedSettings = {
   creatorNotice: string | null;
   license: {
     enabled: boolean;
+    /** ¿Hay una clave de licencia guardada y su firma es válida? */
     paid: boolean;
     /** enabled && !paid: hay que pagar antes de dejar usar /setup. */
     locked: boolean;
     priceLabel: string | null;
     instructions: string | null;
+    /** Clave guardada tal cual (para mostrarla en /creador), o null si no hay. */
+    key: string | null;
+    /** Etiqueta legible de la clave (p. ej. el email del cliente), si es válida. */
+    keyLabel: string | null;
   };
   branding: {
     hasLogo: boolean;
@@ -132,13 +138,19 @@ export const getSettings = cache(async (): Promise<ResolvedSettings> => {
     },
     disabledModules: parseJsonArray<string>(row.disabledModules, []),
     creatorNotice: row.creatorNotice?.trim() || null,
-    license: {
-      enabled: row.licenseEnabled,
-      paid: row.licensePaid,
-      locked: row.licenseEnabled && !row.licensePaid,
-      priceLabel: row.licensePriceLabel?.trim() || null,
-      instructions: row.licensePaymentInstructions?.trim() || null,
-    },
+    license: (() => {
+      const verified = row.licenseKey ? verifyLicenseKey(row.licenseKey) : { valid: false as const };
+      const paid = verified.valid;
+      return {
+        enabled: row.licenseEnabled,
+        paid,
+        locked: row.licenseEnabled && !paid,
+        priceLabel: row.licensePriceLabel?.trim() || null,
+        instructions: row.licensePaymentInstructions?.trim() || null,
+        key: row.licenseKey || null,
+        keyLabel: verified.valid ? verified.payload.sub : null,
+      };
+    })(),
     branding: {
       hasLogo: Boolean(row.logo),
       logoVersion: Math.floor(row.updatedAt.getTime() / 1000),

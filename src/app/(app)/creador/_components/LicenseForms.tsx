@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import {
   saveLicenseConfig,
+  saveLicenseKey,
   approveLicenseClaim,
   rejectLicenseClaim,
   type CreatorState,
@@ -19,12 +20,10 @@ function Status({ state }: { state: CreatorState }) {
 
 export function LicenseConfigForm({
   enabled,
-  paid,
   priceLabel,
   instructions,
 }: {
   enabled: boolean;
-  paid: boolean;
   priceLabel: string | null;
   instructions: string | null;
 }) {
@@ -35,27 +34,18 @@ export function LicenseConfigForm({
       action={action}
       className="space-y-3 rounded-lg border border-black/10 p-5 dark:border-white/10"
     >
-      <div className="flex items-center justify-between">
-        <h2 className="font-medium">Cobro de la licencia</h2>
-        {paid && (
-          <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-xs text-emerald-600 dark:text-emerald-400">
-            Ya pagada
-          </span>
-        )}
-      </div>
+      <h2 className="font-medium">Cobro de la licencia</h2>
       <p className="text-sm opacity-60">
         Si activas el cobro, esta instalación pedirá el pago (pantalla{" "}
         <code>/licencia</code>) antes de dejar crear el administrador en{" "}
-        <code>/setup</code>. Una vez aprobado un comprobante, queda
-        desbloqueada para siempre.
+        <code>/setup</code>. Se desbloquea pegando una clave de licencia
+        válida (ver abajo) — no con un simple interruptor, para que no
+        baste con tocar la base de datos.
       </p>
 
       <label className="flex items-center gap-2 text-sm">
         <input type="checkbox" name="licenseEnabled" defaultChecked={enabled} />
-        <span>
-          Pedir pago antes del primer uso
-          {paid ? " (esta instalación ya está pagada, no volverá a pedirlo)" : ""}
-        </span>
+        <span>Pedir pago antes del primer uso</span>
       </label>
 
       <label className="block space-y-1 text-sm">
@@ -85,6 +75,62 @@ export function LicenseConfigForm({
           className="rounded-md bg-brand px-4 py-2 text-sm text-brand-contrast disabled:opacity-50"
         >
           {pending ? "Guardando…" : "Guardar"}
+        </button>
+        <Status state={state} />
+      </div>
+    </form>
+  );
+}
+
+export function LicenseKeyForm({
+  keyLabel,
+  valid,
+}: {
+  keyLabel: string | null;
+  valid: boolean;
+}) {
+  const [state, action, pending] = useActionState(saveLicenseKey, {});
+
+  return (
+    <form
+      action={action}
+      className="space-y-3 rounded-lg border border-black/10 p-5 dark:border-white/10"
+    >
+      <div className="flex items-center justify-between">
+        <h2 className="font-medium">Clave de licencia</h2>
+        {valid ? (
+          <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-xs text-emerald-600 dark:text-emerald-400">
+            Activa{keyLabel ? ` · ${keyLabel}` : ""}
+          </span>
+        ) : (
+          <span className="rounded-full bg-black/10 px-2 py-0.5 text-xs opacity-60 dark:bg-white/10">
+            Sin activar
+          </span>
+        )}
+      </div>
+      <p className="text-sm opacity-60">
+        Genérala en tu máquina (nunca aquí) con{" "}
+        <code>scripts/generate-license-key.ts</code> usando tu clave
+        privada, y pégala abajo para desbloquear esta instalación.
+      </p>
+      <input
+        name="licenseKey"
+        defaultValue=""
+        placeholder="Pega aquí la clave firmada"
+        className={`${field} font-mono text-xs`}
+      />
+      {valid && (
+        <label className="flex items-center gap-2 text-xs opacity-70">
+          <input type="checkbox" name="licenseKey__clear" />
+          Quitar la clave activa (vuelve a bloquear esta instalación)
+        </label>
+      )}
+      <div className="flex items-center gap-3">
+        <button
+          disabled={pending}
+          className="rounded-md bg-brand px-4 py-2 text-sm text-brand-contrast disabled:opacity-50"
+        >
+          {pending ? "Guardando…" : "Guardar clave"}
         </button>
         <Status state={state} />
       </div>
@@ -143,6 +189,11 @@ export function LicenseClaimsList({ claims }: { claims: Claim[] }) {
           </span>
         )}
       </h2>
+      <p className="text-sm opacity-60">
+        Al aprobar solo queda como registro. Para desbloquear de verdad,
+        genera la clave con el comprobante como referencia y pégala en
+        &quot;Clave de licencia&quot; arriba.
+      </p>
 
       {pending.length === 0 ? (
         <p className="text-sm opacity-60">No hay comprobantes pendientes de revisión.</p>
@@ -172,7 +223,7 @@ export function LicenseClaimsList({ claims }: { claims: Claim[] }) {
                     type="submit"
                     className="rounded-md bg-emerald-600 px-3 py-1 text-xs text-white"
                   >
-                    Aprobar y desbloquear
+                    Marcar aprobado
                   </button>
                 </form>
                 <RejectButton id={c.id} />
