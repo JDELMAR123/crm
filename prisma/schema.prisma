@@ -111,12 +111,17 @@ model LicensePaymentClaim {
 
 /// Registro (solo en la instalación de referencia del creador) de las claves
 /// de licencia generadas desde /creador, para llevar la cuenta de a quién
-/// ya se le entregó una.
+/// ya se le entregó una — y, si el cliente configuró LICENSE_REGISTRY_URL
+/// apuntando aquí, también sirve para permitir/limitar su acceso a
+/// distancia (ver /api/license-status).
 model IssuedLicense {
   id        String   @id @default(cuid())
   label     String // referencia del cliente (email, nombre, etc.)
-  key       String
+  key       String   @unique
+  revoked   Boolean  @default(false)
   createdAt DateTime @default(now())
+
+  @@index([revoked])
 }
 
 /// Producto o servicio del catálogo del negocio. La IA se apoya en estos

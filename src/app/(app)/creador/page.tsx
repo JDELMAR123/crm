@@ -145,7 +145,7 @@ export default async function CreadorPage() {
       )}
       {canGenerateLicenses && (
         <>
-          <LicenseGeneratorForm />
+          <LicenseGeneratorForm origin={`https://${host}`} />
           <IssuedLicensesList licenses={issuedLicenses} />
         </>
       )}

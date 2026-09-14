@@ -11,10 +11,13 @@ export const dynamic = "force-dynamic";
 
 export default async function LicenciaPage() {
   await ensureCreatorAccount();
-  if (await hasAnyUser()) redirect("/login");
 
   const settings = await getSettings();
-  if (!settings.license.locked) redirect("/setup");
+  if (!settings.license.locked) {
+    // Nada que hacer aquí: manda a donde corresponda según si ya hay
+    // administrador real o todavía no.
+    redirect((await hasAnyUser()) ? "/login" : "/setup");
+  }
 
   const claim = await getMyLicenseClaim();
   const claimPending = claim && claim.status === "pending";
@@ -22,11 +25,13 @@ export default async function LicenciaPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-xl font-semibold">Activa tu CRM</h1>
+        <h1 className="text-xl font-semibold">
+          {settings.license.revoked ? "Acceso suspendido" : "Activa tu CRM"}
+        </h1>
         <p className="text-sm opacity-70">
-          Este es un paso único. Realiza el pago con alguno de los métodos de
-          abajo y te daremos una clave de licencia para desbloquear tu
-          instalación.
+          {settings.license.revoked
+            ? "El acceso a este CRM fue suspendido. Contacta a quien te lo vendió para reactivarlo, o pega abajo una clave de licencia nueva si ya te la dieron."
+            : "Este es un paso único. Realiza el pago con alguno de los métodos de abajo y te daremos una clave de licencia para desbloquear tu instalación."}
         </p>
       </div>
 

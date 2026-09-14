@@ -5,6 +5,7 @@ import {
   saveLicenseConfig,
   saveLicenseKey,
   generateLicenseKey,
+  setLicenseRevoked,
   approveLicenseClaim,
   rejectLicenseClaim,
   type CreatorState,
@@ -143,7 +144,7 @@ export function LicenseKeyForm({
  * Genera una clave de licencia con un clic, sin terminal — solo aparece
  * cuando esta instalación tiene configurada tu clave privada de firma.
  */
-export function LicenseGeneratorForm() {
+export function LicenseGeneratorForm({ origin }: { origin: string }) {
   const [state, action, pending] = useActionState(generateLicenseKey, {});
 
   return (
@@ -154,6 +155,14 @@ export function LicenseGeneratorForm() {
         su clave aquí mismo. Luego pégala en la sección &quot;Clave de
         licencia&quot; del panel de Creador de su instalación, o mándasela
         para que la pegue él mismo en <code>/licencia</code>.
+      </p>
+      <p className="rounded-md bg-black/5 p-2 text-xs opacity-70 dark:bg-white/5">
+        Para poder bloquearle el acceso más adelante si hiciera falta,
+        configúrale en su instalación la variable{" "}
+        <code>LICENSE_REGISTRY_URL</code> con el valor{" "}
+        <code>{origin}</code> (esta misma instalación). Es opcional — sin
+        eso, la clave que le des funciona igual, solo que no la podrás
+        revocar a distancia.
       </p>
       <form action={action} className="flex flex-col gap-2 sm:flex-row">
         <input
@@ -190,22 +199,57 @@ export function LicenseGeneratorForm() {
   );
 }
 
+function RevokeToggle({ id, revoked }: { id: string; revoked: boolean }) {
+  return (
+    <form action={setLicenseRevoked}>
+      <input type="hidden" name="id" value={id} />
+      <input type="hidden" name="revoked" value={revoked ? "0" : "1"} />
+      <button
+        type="submit"
+        className={
+          revoked
+            ? "rounded-md bg-emerald-600 px-2 py-1 text-xs text-white"
+            : "rounded-md border border-red-500/40 px-2 py-1 text-xs text-red-600 dark:text-red-400"
+        }
+      >
+        {revoked ? "Restaurar acceso" : "Bloquear acceso"}
+      </button>
+    </form>
+  );
+}
+
 export function IssuedLicensesList({
   licenses,
 }: {
-  licenses: { id: string; label: string; createdAt: Date }[];
+  licenses: { id: string; label: string; revoked: boolean; createdAt: Date }[];
 }) {
   if (licenses.length === 0) return null;
   return (
-    <section className="space-y-2 rounded-lg border border-black/10 p-5 dark:border-white/10">
+    <section className="space-y-3 rounded-lg border border-black/10 p-5 dark:border-white/10">
       <h2 className="font-medium">Claves generadas</h2>
-      <ul className="space-y-1 text-sm">
+      <p className="text-sm opacity-60">
+        Bloquear corta el acceso de esa cuenta a su CRM en menos de un día —
+        solo si esa instalación tiene <code>LICENSE_REGISTRY_URL</code>{" "}
+        apuntando aquí (te lo explico si aún no lo has puesto).
+      </p>
+      <ul className="space-y-2 text-sm">
         {licenses.map((l) => (
-          <li key={l.id} className="flex items-center justify-between">
-            <span>{l.label}</span>
-            <span className="text-xs opacity-50">
-              {l.createdAt.toLocaleDateString("es-ES")}
-            </span>
+          <li
+            key={l.id}
+            className="flex flex-wrap items-center justify-between gap-2 border-b border-black/10 pb-2 last:border-0 last:pb-0 dark:border-white/10"
+          >
+            <div className="flex items-center gap-2">
+              <span>{l.label}</span>
+              {l.revoked && (
+                <span className="rounded-full bg-red-500/15 px-2 py-0.5 text-xs text-red-600 dark:text-red-400">
+                  Bloqueada
+                </span>
+              )}
+              <span className="text-xs opacity-50">
+                {l.createdAt.toLocaleDateString("es-ES")}
+              </span>
+            </div>
+            <RevokeToggle id={l.id} revoked={l.revoked} />
           </li>
         ))}
       </ul>

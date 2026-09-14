@@ -2,6 +2,7 @@ import "server-only";
 import { cache } from "react";
 import { prisma } from "@/lib/prisma";
 import { verifyLicenseKey } from "@/lib/license/crypto";
+import { isLicenseRemotelyBlocked } from "@/lib/license/registry";
 import {
   DEFAULT_AI_MODEL,
   DEFAULT_BUSINESS_CONTEXT,
@@ -31,10 +32,12 @@ export type ResolvedSettings = {
   creatorNotice: string | null;
   license: {
     enabled: boolean;
-    /** ¿Hay una clave de licencia guardada y su firma es válida? */
+    /** ¿Hay una clave de licencia guardada, firma válida y no revocada a distancia? */
     paid: boolean;
     /** enabled && !paid: hay que pagar antes de dejar usar /setup. */
     locked: boolean;
+    /** La clave era válida pero el creador la bloqueó a distancia (mensaje distinto al de "nunca pagó"). */
+    revoked: boolean;
     priceLabel: string | null;
     instructions: string | null;
     /** Clave guardada tal cual (para mostrarla en /creador), o null si no hay. */
@@ -142,14 +145,18 @@ export const getSettings = cache(async (): Promise<ResolvedSettings> => {
     },
     disabledModules: parseJsonArray<string>(row.disabledModules, []),
     creatorNotice: row.creatorNotice?.trim() || null,
-    license: (() => {
+    license: await (async () => {
       const verified = row.licenseKey ? verifyLicenseKey(row.licenseKey) : { valid: false as const };
-      const paid = verified.valid;
+      const revoked = verified.valid && row.licenseKey
+        ? await isLicenseRemotelyBlocked(row.licenseKey)
+        : false;
+      const paid = verified.valid && !revoked;
       const locked = row.licenseEnabled && !paid;
       return {
         enabled: row.licenseEnabled,
         paid,
         locked,
+        revoked,
         priceLabel: row.licensePriceLabel?.trim() || null,
         // Si está bloqueada y el creador aún no puso instrucciones propias,
         // que al menos diga a quién contactar en vez de mostrar un hueco vacío.

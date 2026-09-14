@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { ensureCreatorAccount, isCreatorEmail } from "@/lib/creator";
 import { getSettings } from "@/lib/settings";
@@ -15,6 +16,11 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
   ]);
   const off = settings.disabledModules;
   const isCreator = isCreatorEmail(user.email);
+
+  // Si el creador revocó la clave de esta instalación, se corta el acceso a
+  // todo el equipo del cliente — salvo al propio creador, que siempre debe
+  // poder entrar (a revisar, a restaurar el acceso, a lo que haga falta).
+  if (settings.license.locked && !isCreator) redirect("/licencia");
 
   const navItems: NavItem[] = [
     { href: "/", label: "Inicio" },

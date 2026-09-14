@@ -144,6 +144,21 @@ export async function generateLicenseKey(
   return { ok: true, key };
 }
 
+/**
+ * Bloquea o restaura el acceso de una clave ya generada. El cliente lo nota
+ * en menos de un día (revisión "de falla abierta" — ver src/lib/license/registry.ts),
+ * y solo si su instalación tiene LICENSE_REGISTRY_URL apuntando aquí.
+ */
+export async function setLicenseRevoked(formData: FormData): Promise<void> {
+  await requireCreator();
+  const id = String(formData.get("id") ?? "");
+  const revoked = formData.get("revoked") === "1";
+  if (!id) return;
+
+  await prisma.issuedLicense.update({ where: { id }, data: { revoked } });
+  revalidatePath("/creador");
+}
+
 /** Rechaza un comprobante; el comprador puede volver a intentarlo desde /licencia. */
 export async function rejectLicenseClaim(formData: FormData): Promise<void> {
   await requireCreator();
