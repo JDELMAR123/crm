@@ -11,12 +11,9 @@ import {
   type CreatorState,
 } from "@/lib/actions/creator";
 
-const field =
-  "w-full rounded-md border border-black/15 bg-transparent px-3 py-2 text-sm outline-none focus:border-foreground dark:border-white/20";
-
 function Status({ state }: { state: CreatorState }) {
-  if (state.ok) return <span className="text-sm text-green-600 dark:text-green-400">Guardado ✓</span>;
-  if (state.error) return <span className="text-sm text-red-600 dark:text-red-400">{state.error}</span>;
+  if (state.ok) return <span className="hk-status-msg ok">guardado [ok]</span>;
+  if (state.error) return <span className="hk-status-msg error">error: {state.error}</span>;
   return null;
 }
 
@@ -32,51 +29,45 @@ export function LicenseConfigForm({
   const [state, action, pending] = useActionState(saveLicenseConfig, {});
 
   return (
-    <form
-      action={action}
-      className="space-y-3 rounded-lg border border-black/10 p-5 dark:border-white/10"
-    >
-      <h2 className="font-medium">Cobro de la licencia</h2>
-      <p className="text-sm opacity-60">
+    <form action={action} className="hk-section">
+      <h2 className="hk-section-title">Cobro de la licencia</h2>
+      <p className="hk-section-hint">
         Si activas el cobro, esta instalación pedirá el pago (pantalla{" "}
         <code>/licencia</code>) antes de dejar crear el administrador en{" "}
         <code>/setup</code>. Se desbloquea pegando una clave de licencia
-        válida (ver abajo) — no con un simple interruptor, para que no
-        baste con tocar la base de datos.
+        válida — no con un simple interruptor, para que no baste con tocar
+        la base de datos.
       </p>
 
-      <label className="flex items-center gap-2 text-sm">
+      <label className="hk-check-row">
         <input type="checkbox" name="licenseEnabled" defaultChecked={enabled} />
         <span>Pedir pago antes del primer uso</span>
       </label>
 
-      <label className="block space-y-1 text-sm">
-        <span className="font-medium">Precio a mostrar</span>
+      <div className="hk-field" style={{ marginTop: 14 }}>
+        <span className="hk-label">Precio a mostrar</span>
         <input
           name="licensePriceLabel"
           defaultValue={priceLabel ?? ""}
           placeholder='p. ej. "$49 USD" o "$49 USD / mes"'
-          className={field}
+          className="hk-input"
         />
-      </label>
+      </div>
 
-      <label className="block space-y-1 text-sm">
-        <span className="font-medium">Métodos e instrucciones de pago</span>
+      <div className="hk-field">
+        <span className="hk-label">Métodos e instrucciones de pago</span>
         <textarea
           name="licensePaymentInstructions"
           defaultValue={instructions ?? ""}
           rows={4}
           placeholder={"Zelle: nombre@correo.com\nBinance (USDT): xxxxxxxx\nPago móvil: 0412-...\n"}
-          className={field}
+          className="hk-textarea"
         />
-      </label>
+      </div>
 
       <div className="flex items-center gap-3">
-        <button
-          disabled={pending}
-          className="rounded-md bg-brand px-4 py-2 text-sm text-brand-contrast disabled:opacity-50"
-        >
-          {pending ? "Guardando…" : "Guardar"}
+        <button disabled={pending} className="hk-btn">
+          {pending ? "guardando…" : "guardar"}
         </button>
         <Status state={state} />
       </div>
@@ -94,45 +85,36 @@ export function LicenseKeyForm({
   const [state, action, pending] = useActionState(saveLicenseKey, {});
 
   return (
-    <form
-      action={action}
-      className="space-y-3 rounded-lg border border-black/10 p-5 dark:border-white/10"
-    >
+    <form action={action} className="hk-section">
       <div className="flex items-center justify-between">
-        <h2 className="font-medium">Clave de licencia</h2>
-        {valid ? (
-          <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-xs text-emerald-600 dark:text-emerald-400">
-            Activa{keyLabel ? ` · ${keyLabel}` : ""}
-          </span>
-        ) : (
-          <span className="rounded-full bg-black/10 px-2 py-0.5 text-xs opacity-60 dark:bg-white/10">
-            Sin activar
-          </span>
-        )}
+        <h2 className="hk-section-title" style={{ marginBottom: 0 }}>Clave de licencia</h2>
+        <span className={`hk-badge ${valid ? "ok" : "neutral"}`}>
+          {valid ? `activa${keyLabel ? ` · ${keyLabel}` : ""}` : "sin activar"}
+        </span>
       </div>
-      <p className="text-sm opacity-60">
+      <p className="hk-section-hint" style={{ marginTop: 8 }}>
         Genérala en tu máquina (nunca aquí) con{" "}
         <code>scripts/generate-license-key.ts</code> usando tu clave
         privada, y pégala abajo para desbloquear esta instalación.
       </p>
-      <input
-        name="licenseKey"
-        defaultValue=""
-        placeholder="Pega aquí la clave firmada"
-        className={`${field} font-mono text-xs`}
-      />
+      <div className="hk-field">
+        <input
+          name="licenseKey"
+          defaultValue=""
+          placeholder="Pega aquí la clave firmada"
+          className="hk-input hk-mono"
+          style={{ fontSize: 12 }}
+        />
+      </div>
       {valid && (
-        <label className="flex items-center gap-2 text-xs opacity-70">
+        <label className="hk-check-row" style={{ fontSize: 12 }}>
           <input type="checkbox" name="licenseKey__clear" />
-          Quitar la clave activa (vuelve a bloquear esta instalación)
+          <span>Quitar la clave activa (vuelve a bloquear esta instalación)</span>
         </label>
       )}
-      <div className="flex items-center gap-3">
-        <button
-          disabled={pending}
-          className="rounded-md bg-brand px-4 py-2 text-sm text-brand-contrast disabled:opacity-50"
-        >
-          {pending ? "Guardando…" : "Guardar clave"}
+      <div className="flex items-center gap-3" style={{ marginTop: 4 }}>
+        <button disabled={pending} className="hk-btn">
+          {pending ? "guardando…" : "guardar clave"}
         </button>
         <Status state={state} />
       </div>
@@ -148,15 +130,15 @@ export function LicenseGeneratorForm({ origin }: { origin: string }) {
   const [state, action, pending] = useActionState(generateLicenseKey, {});
 
   return (
-    <section className="space-y-3 rounded-lg border border-black/10 p-5 dark:border-white/10">
-      <h2 className="font-medium">Generar clave de licencia</h2>
-      <p className="text-sm opacity-60">
+    <section className="hk-section">
+      <h2 className="hk-section-title">Generar clave de licencia</h2>
+      <p className="hk-section-hint">
         Escribe una referencia del cliente (su email, por ejemplo) y genera
         su clave aquí mismo. Luego pégala en la sección &quot;Clave de
         licencia&quot; del panel de Creador de su instalación, o mándasela
         para que la pegue él mismo en <code>/licencia</code>.
       </p>
-      <p className="rounded-md bg-black/5 p-2 text-xs opacity-70 dark:bg-white/5">
+      <p className="hk-section-hint" style={{ background: "var(--hk-bg-inset)", border: "1px solid var(--hk-border)", borderRadius: 3, padding: "8px 10px" }}>
         Para poder bloquearle el acceso más adelante si hiciera falta,
         configúrale en su instalación la variable{" "}
         <code>LICENSE_REGISTRY_URL</code> con el valor{" "}
@@ -164,34 +146,27 @@ export function LicenseGeneratorForm({ origin }: { origin: string }) {
         eso, la clave que le des funciona igual, solo que no la podrás
         revocar a distancia.
       </p>
-      <form action={action} className="flex flex-col gap-2 sm:flex-row">
+      <form action={action} className="flex flex-col gap-2 sm:flex-row" style={{ marginTop: 12 }}>
         <input
           name="label"
           placeholder="cliente@ejemplo.com"
-          className={field}
+          className="hk-input"
         />
-        <button
-          type="submit"
-          disabled={pending}
-          className="shrink-0 rounded-md bg-brand px-4 py-2 text-sm text-brand-contrast disabled:opacity-50"
-        >
-          {pending ? "Generando…" : "Generar clave"}
+        <button type="submit" disabled={pending} className="hk-btn shrink-0">
+          {pending ? "generando…" : "generar clave"}
         </button>
       </form>
-      {state.error && (
-        <p className="text-sm text-red-600 dark:text-red-400">{state.error}</p>
-      )}
+      {state.error && <p className="hk-status-msg error" style={{ marginTop: 8 }}>error: {state.error}</p>}
       {state.key && (
-        <div className="space-y-1">
-          <span className="text-xs opacity-60">
-            Clave generada — selecciónala y cópiala:
-          </span>
+        <div className="hk-field" style={{ marginTop: 10 }}>
+          <span className="hk-label">Clave generada — selecciónala y cópiala</span>
           <textarea
             readOnly
             rows={3}
             value={state.key}
             onFocus={(e) => e.currentTarget.select()}
-            className={`${field} font-mono text-xs`}
+            className="hk-textarea hk-mono"
+            style={{ fontSize: 11 }}
           />
         </div>
       )}
@@ -204,15 +179,8 @@ function RevokeToggle({ id, revoked }: { id: string; revoked: boolean }) {
     <form action={setLicenseRevoked}>
       <input type="hidden" name="id" value={id} />
       <input type="hidden" name="revoked" value={revoked ? "0" : "1"} />
-      <button
-        type="submit"
-        className={
-          revoked
-            ? "rounded-md bg-emerald-600 px-2 py-1 text-xs text-white"
-            : "rounded-md border border-red-500/40 px-2 py-1 text-xs text-red-600 dark:text-red-400"
-        }
-      >
-        {revoked ? "Restaurar acceso" : "Bloquear acceso"}
+      <button type="submit" className={`hk-btn small${revoked ? "" : " danger"}`}>
+        {revoked ? "restaurar acceso" : "bloquear acceso"}
       </button>
     </form>
   );
@@ -225,31 +193,28 @@ export function IssuedLicensesList({
 }) {
   if (licenses.length === 0) return null;
   return (
-    <section className="space-y-3 rounded-lg border border-black/10 p-5 dark:border-white/10">
-      <h2 className="font-medium">Claves generadas</h2>
-      <p className="text-sm opacity-60">
+    <section className="hk-section">
+      <h2 className="hk-section-title">Claves generadas</h2>
+      <p className="hk-section-hint">
         Bloquear corta el acceso de esa cuenta a su CRM en menos de un día —
         solo si esa instalación tiene <code>LICENSE_REGISTRY_URL</code>{" "}
-        apuntando aquí (te lo explico si aún no lo has puesto).
+        apuntando aquí.
       </p>
-      <ul className="space-y-2 text-sm">
+      <ul className="hk-list">
         {licenses.map((l) => (
-          <li
-            key={l.id}
-            className="flex flex-wrap items-center justify-between gap-2 border-b border-black/10 pb-2 last:border-0 last:pb-0 dark:border-white/10"
-          >
-            <div className="flex items-center gap-2">
-              <span>{l.label}</span>
-              {l.revoked && (
-                <span className="rounded-full bg-red-500/15 px-2 py-0.5 text-xs text-red-600 dark:text-red-400">
-                  Bloqueada
-                </span>
-              )}
-              <span className="text-xs opacity-50">
+          <li key={l.id} className="hk-list-item">
+            <div className="hk-list-item-top">
+              <span>
+                {l.label}{" "}
+                {l.revoked && <span className="hk-badge danger" style={{ marginLeft: 6 }}>bloqueada</span>}
+              </span>
+              <span className="hk-footnote" style={{ margin: 0 }}>
                 {l.createdAt.toLocaleDateString("es-ES")}
               </span>
             </div>
-            <RevokeToggle id={l.id} revoked={l.revoked} />
+            <div className="hk-list-item-actions">
+              <RevokeToggle id={l.id} revoked={l.revoked} />
+            </div>
           </li>
         ))}
       </ul>
@@ -269,25 +234,24 @@ type Claim = {
 
 function RejectButton({ id }: { id: string }) {
   return (
-    <details className="inline-block">
-      <summary className="cursor-pointer rounded-md border border-red-500/40 px-2 py-1 text-xs text-red-600 dark:text-red-400">
-        Rechazar
+    <details style={{ display: "inline-block" }}>
+      <summary className="hk-btn small danger" style={{ display: "inline-flex", cursor: "pointer" }}>
+        rechazar
       </summary>
       <form
         action={rejectLicenseClaim}
-        className="mt-2 flex flex-col gap-2 rounded-md border border-black/10 p-2 dark:border-white/10"
+        className="hk-field"
+        style={{ marginTop: 8, border: "1px solid var(--hk-border)", borderRadius: 3, padding: 8 }}
       >
         <input type="hidden" name="id" value={id} />
         <input
           name="note"
           placeholder="Motivo (opcional, lo verá el comprador)"
-          className="rounded-md border border-black/15 bg-transparent px-2 py-1 text-xs outline-none dark:border-white/20"
+          className="hk-input"
+          style={{ fontSize: 12, marginBottom: 8 }}
         />
-        <button
-          type="submit"
-          className="self-start rounded-md bg-red-600 px-2 py-1 text-xs text-white"
-        >
-          Confirmar rechazo
+        <button type="submit" className="hk-btn small danger">
+          confirmar rechazo
         </button>
       </form>
     </details>
@@ -299,50 +263,44 @@ export function LicenseClaimsList({ claims }: { claims: Claim[] }) {
   const resolved = claims.filter((c) => c.status !== "pending").slice(0, 5);
 
   return (
-    <section className="space-y-3 rounded-lg border border-black/10 p-5 dark:border-white/10">
-      <h2 className="font-medium">
+    <section className="hk-section">
+      <h2 className="hk-section-title">
         Comprobantes de pago{" "}
         {pending.length > 0 && (
-          <span className="rounded-full bg-amber-500/15 px-2 py-0.5 text-xs text-amber-600 dark:text-amber-400">
+          <span className="hk-badge warn" style={{ marginLeft: 8, textTransform: "none", letterSpacing: 0 }}>
             {pending.length} pendiente{pending.length > 1 ? "s" : ""}
           </span>
         )}
       </h2>
-      <p className="text-sm opacity-60">
+      <p className="hk-section-hint">
         Al aprobar solo queda como registro. Para desbloquear de verdad,
         genera la clave con el comprobante como referencia y pégala en
         &quot;Clave de licencia&quot; arriba.
       </p>
 
       {pending.length === 0 ? (
-        <p className="text-sm opacity-60">No hay comprobantes pendientes de revisión.</p>
+        <p className="hk-empty">No hay comprobantes pendientes de revisión.</p>
       ) : (
-        <ul className="space-y-3">
+        <ul className="hk-list">
           {pending.map((c) => (
-            <li
-              key={c.id}
-              className="space-y-1 rounded-md border border-black/10 p-3 text-sm dark:border-white/10"
-            >
-              <div className="flex flex-wrap items-center justify-between gap-2">
+            <li key={c.id} className="hk-list-item">
+              <div className="hk-list-item-top">
                 <div>
-                  <span className="font-mono">{c.reference}</span>
-                  {c.method && <span className="ml-2 opacity-60">· {c.method}</span>}
+                  <span className="hk-mono">{c.reference}</span>
+                  {c.method && <span className="hk-footnote" style={{ marginLeft: 8 }}>· {c.method}</span>}
                 </div>
-                <span className="text-xs opacity-50">
+                <span className="hk-footnote" style={{ margin: 0 }}>
                   {c.createdAt.toLocaleString("es-ES")}
                 </span>
               </div>
               {c.contactInfo && (
-                <div className="text-xs opacity-70">Contacto: {c.contactInfo}</div>
+                <div className="hk-footnote" style={{ marginTop: 4 }}>Contacto: {c.contactInfo}</div>
               )}
-              <div className="flex items-center gap-2 pt-1">
+              <div className="hk-list-item-actions">
                 <form action={approveLicenseClaim}>
                   <input type="hidden" name="id" value={c.id} />
-                  <button
-                    type="submit"
-                    className="rounded-md bg-emerald-600 px-3 py-1 text-xs text-white"
-                  >
-                    Marcar aprobado
+                  <button type="submit" className="hk-btn small">
+                    marcar aprobado
                   </button>
                 </form>
                 <RejectButton id={c.id} />
@@ -353,14 +311,12 @@ export function LicenseClaimsList({ claims }: { claims: Claim[] }) {
       )}
 
       {resolved.length > 0 && (
-        <div className="pt-2">
-          <div className="mb-1 text-xs uppercase tracking-wide opacity-50">
-            Últimos revisados
-          </div>
-          <ul className="space-y-1 text-xs opacity-70">
+        <div style={{ marginTop: 14 }}>
+          <div className="hk-label">Últimos revisados</div>
+          <ul className="hk-list" style={{ gap: 4 }}>
             {resolved.map((c) => (
-              <li key={c.id}>
-                <span className="font-mono">{c.reference}</span> —{" "}
+              <li key={c.id} className="hk-footnote" style={{ margin: 0 }}>
+                <span className="hk-mono">{c.reference}</span> —{" "}
                 {c.status === "approved" ? "aprobado" : "rechazado"}
               </li>
             ))}

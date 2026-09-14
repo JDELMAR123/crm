@@ -10,42 +10,29 @@ const MODULES: { id: "inbox" | "pipeline" | "ia"; label: string; desc: string }[
 ];
 
 function Status({ state }: { state: CreatorState }) {
-  if (state.ok) return <span className="text-sm text-green-600 dark:text-green-400">Guardado ✓</span>;
-  if (state.error) return <span className="text-sm text-red-600 dark:text-red-400">{state.error}</span>;
+  if (state.ok) return <span className="hk-status-msg ok">guardado [ok]</span>;
+  if (state.error) return <span className="hk-status-msg error">error: {state.error}</span>;
   return null;
 }
 
 export function ModulesForm({ disabled }: { disabled: string[] }) {
   const [state, action, pending] = useActionState(saveModules, {});
   return (
-    <form
-      action={action}
-      className="space-y-3 rounded-lg border border-black/10 p-5 dark:border-white/10"
-    >
-      <h2 className="font-medium">Módulos activos</h2>
-      <p className="text-sm opacity-60">
-        Desactiva un módulo para ocultarlo en esta instalación.
-      </p>
+    <form action={action} className="hk-section">
+      <h2 className="hk-section-title">Módulos activos</h2>
+      <p className="hk-section-hint">Desactiva un módulo para ocultarlo en esta instalación.</p>
       {MODULES.map((m) => (
-        <label key={m.id} className="flex gap-3 text-sm">
-          <input
-            type="checkbox"
-            name={`mod_${m.id}`}
-            defaultChecked={!disabled.includes(m.id)}
-            className="mt-0.5"
-          />
+        <label key={m.id} className="hk-check-row">
+          <input type="checkbox" name={`mod_${m.id}`} defaultChecked={!disabled.includes(m.id)} />
           <span>
-            <span className="font-medium">{m.label}</span>
-            <span className="block opacity-60">{m.desc}</span>
+            {m.label}
+            <span className="hk-check-desc">{m.desc}</span>
           </span>
         </label>
       ))}
-      <div className="flex items-center gap-3">
-        <button
-          disabled={pending}
-          className="rounded-md bg-brand px-4 py-2 text-sm text-brand-contrast disabled:opacity-50"
-        >
-          {pending ? "Guardando…" : "Guardar"}
+      <div className="mt-3 flex items-center gap-3">
+        <button disabled={pending} className="hk-btn">
+          {pending ? "guardando…" : "guardar"}
         </button>
         <Status state={state} />
       </div>
@@ -56,12 +43,9 @@ export function ModulesForm({ disabled }: { disabled: string[] }) {
 export function NoticeForm({ notice }: { notice: string | null }) {
   const [state, action, pending] = useActionState(saveNotice, {});
   return (
-    <form
-      action={action}
-      className="space-y-3 rounded-lg border border-black/10 p-5 dark:border-white/10"
-    >
-      <h2 className="font-medium">Aviso a los usuarios</h2>
-      <p className="text-sm opacity-60">
+    <form action={action} className="hk-section">
+      <h2 className="hk-section-title">Aviso a los usuarios</h2>
+      <p className="hk-section-hint">
         Aparece como banner dentro del CRM para todo el equipo. Vacío = sin aviso.
       </p>
       <textarea
@@ -69,14 +53,11 @@ export function NoticeForm({ notice }: { notice: string | null }) {
         defaultValue={notice ?? ""}
         rows={3}
         placeholder="Ej.: Mantenimiento programado el domingo a las 22:00."
-        className="w-full rounded-md border border-black/15 bg-transparent px-3 py-2 text-sm outline-none focus:border-foreground dark:border-white/20"
+        className="hk-textarea"
       />
-      <div className="flex items-center gap-3">
-        <button
-          disabled={pending}
-          className="rounded-md bg-brand px-4 py-2 text-sm text-brand-contrast disabled:opacity-50"
-        >
-          {pending ? "Guardando…" : "Guardar"}
+      <div className="mt-3 flex items-center gap-3">
+        <button disabled={pending} className="hk-btn">
+          {pending ? "guardando…" : "guardar"}
         </button>
         <Status state={state} />
       </div>
