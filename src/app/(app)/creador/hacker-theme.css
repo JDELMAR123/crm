@@ -1,8 +1,9 @@
 /* Tema exclusivo del panel del creador: terminal negro / verde neón,
    aplicado a TODA la página (incluido el menú) mientras estás en /creador.
    Se activa poniendo la clase .hacker-active en <body> — ver
-   HackerBodyEffect.tsx. El resto del CRM (lo que ve el cliente) no se toca:
-   nada de esto aplica fuera de /creador porque la clase se quita al salir. */
+   src/components/CreatorThemeSync.tsx, que la sincroniza con la URL
+   actual. El resto del CRM (lo que ve el cliente) no se toca: nada de
+   esto aplica fuera de /creador porque la clase se quita al salir. */
 
 body.hacker-active {
   --hk-bg: #04070a;
@@ -62,6 +63,14 @@ body.hacker-active::after {
 @keyframes hk-flash {
   0% { opacity: 1; }
   100% { opacity: 0; }
+}
+
+/* El contenido real de /creador: aquí SÍ está definida --font-hk-mono
+   (la trae la clase de next/font en el wrapper), así que se redeclara
+   font-family aquí para que se recalcule con la tipografía real en vez
+   de heredar el fallback que usa <body> (el menú, fuera de este div). */
+.hk-content {
+  font-family: var(--font-hk-mono), ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
 }
 
 /* Barrido de escaneo ambiental, cubre toda la pantalla (menú incluido). */

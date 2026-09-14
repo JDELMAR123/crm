@@ -7,6 +7,7 @@ import { logout } from "@/lib/actions/auth";
 import { BrandMark, BrandStyle } from "@/components/Brand";
 import NavLinks, { type NavItem } from "@/components/NavLinks";
 import PageTransition from "@/components/PageTransition";
+import CreatorThemeSync from "@/components/CreatorThemeSync";
 
 export default async function AppLayout({ children }: LayoutProps<"/">) {
   const [user, settings] = await Promise.all([
@@ -40,6 +41,7 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
 
   return (
     <>
+      <CreatorThemeSync />
       <BrandStyle branding={settings.branding} />
       {settings.creatorNotice && (
         <div className="bg-amber-500/15 px-6 py-2 text-center text-sm text-amber-800 dark:text-amber-200">
