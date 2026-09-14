@@ -186,10 +186,113 @@ function RevokeToggle({ id, revoked }: { id: string; revoked: boolean }) {
   );
 }
 
+type IssuedLicenseRow = { id: string; label: string; revoked: boolean; createdAt: Date };
+
+/** Últimos N meses (incluido el actual) con cuántas claves se generaron en cada uno. */
+function monthlyBuckets(licenses: IssuedLicenseRow[], months: number) {
+  const now = new Date();
+  const buckets: { label: string; count: number }[] = [];
+  for (let i = months - 1; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const count = licenses.filter((l) => {
+      const c = l.createdAt;
+      return c.getFullYear() === d.getFullYear() && c.getMonth() === d.getMonth();
+    }).length;
+    buckets.push({ label: d.toLocaleDateString("es-ES", { month: "short" }).replace(".", ""), count });
+  }
+  return buckets;
+}
+
+function GrowthChart({ licenses }: { licenses: IssuedLicenseRow[] }) {
+  const buckets = monthlyBuckets(licenses, 6);
+  const max = Math.max(1, ...buckets.map((b) => b.count));
+  const w = 320, h = 120, padL = 6, padR = 6, padT = 16, padB = 18;
+  const plotW = w - padL - padR;
+  const plotH = h - padT - padB;
+  const gap = 10;
+  const barW = (plotW - gap * (buckets.length - 1)) / buckets.length;
+
+  return (
+    <svg viewBox={`0 0 ${w} ${h}`} className="hk-chart" role="img" aria-label="Clientes nuevos por mes">
+      {[0.25, 0.5, 0.75, 1].map((f) => (
+        <line
+          key={f}
+          x1={padL} x2={w - padR}
+          y1={padT + plotH * (1 - f)} y2={padT + plotH * (1 - f)}
+          className="hk-chart-grid"
+        />
+      ))}
+      {buckets.map((b, i) => {
+        const bh = (b.count / max) * plotH;
+        const x = padL + i * (barW + gap);
+        const y = padT + plotH - bh;
+        return (
+          <g key={i}>
+            {b.count > 0 && (
+              <rect x={x} y={y} width={barW} height={bh} rx="2" className="hk-chart-bar" />
+            )}
+            {b.count > 0 && (
+              <text x={x + barW / 2} y={y - 4} textAnchor="middle" className="hk-chart-value">
+                {b.count}
+              </text>
+            )}
+            <text x={x + barW / 2} y={h - 4} textAnchor="middle" className="hk-chart-label">
+              {b.label}
+            </text>
+          </g>
+        );
+      })}
+    </svg>
+  );
+}
+
+/** Cuánta gente tiene tu CRM: totales, activas/bloqueadas, y altas por mes. */
+export function LicenseOverview({ licenses }: { licenses: IssuedLicenseRow[] }) {
+  const total = licenses.length;
+  const blocked = licenses.filter((l) => l.revoked).length;
+  const active = total - blocked;
+
+  return (
+    <section className="hk-section">
+      <h2 className="hk-section-title">Cuánta gente tiene tu CRM</h2>
+      <p className="hk-section-hint">
+        Basado en las claves que has generado desde este panel — tu único
+        registro real de clientes, no depende de que ninguna instalación
+        reporte nada.
+      </p>
+      <div className="hk-stats" style={{ gridTemplateColumns: "repeat(3, 1fr)" }}>
+        <div className="hk-stat">
+          <div className="hk-stat-n">{total}</div>
+          <div className="hk-stat-l">clientes totales</div>
+        </div>
+        <div className="hk-stat">
+          <div className="hk-stat-n">{active}</div>
+          <div className="hk-stat-l">con acceso activo</div>
+        </div>
+        <div className="hk-stat">
+          <div className="hk-stat-n">{blocked}</div>
+          <div className="hk-stat-l">bloqueados</div>
+        </div>
+      </div>
+      {total === 0 ? (
+        <p className="hk-empty" style={{ marginTop: 14 }}>
+          Todavía no has generado ninguna clave — en cuanto vendas la primera,
+          aquí verás el conteo y la gráfica de altas por mes.
+        </p>
+      ) : (
+        <div style={{ marginTop: 16 }}>
+          <div className="hk-label" style={{ marginBottom: 6 }}>Altas por mes (últimos 6)</div>
+          <GrowthChart licenses={licenses} />
+        </div>
+      )}
+    </section>
+  );
+}
+
 export function IssuedLicensesList({
   licenses,
 }: {
-  licenses: { id: string; label: string; revoked: boolean; createdAt: Date }[];
+  licenses: IssuedLicenseRow[];
 }) {
   if (licenses.length === 0) return null;
   return (

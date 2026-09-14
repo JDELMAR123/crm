@@ -9,6 +9,7 @@ import {
   LicenseKeyForm,
   LicenseClaimsList,
   LicenseGeneratorForm,
+  LicenseOverview,
   IssuedLicensesList,
 } from "./_components/LicenseForms";
 
@@ -140,6 +141,7 @@ export default async function CreadorPage() {
         {canGenerateLicenses && (
           <>
             <LicenseGeneratorForm origin={`https://${host}`} />
+            <LicenseOverview licenses={issuedLicenses} />
             <IssuedLicensesList licenses={issuedLicenses} />
           </>
         )}
