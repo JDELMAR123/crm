@@ -1,4 +1,4 @@
-import { verify } from "node:crypto";
+import { sign, verify } from "node:crypto";
 
 /**
  * Clave pública de licencias. Verifica claves firmadas SIN llamar a ningún
@@ -19,6 +19,24 @@ export type LicensePayload = { sub: string; iat: number };
 function b64urlToBuffer(s: string): Buffer {
   const pad = s.length % 4 === 0 ? "" : "=".repeat(4 - (s.length % 4));
   return Buffer.from(s.replace(/-/g, "+").replace(/_/g, "/") + pad, "base64");
+}
+
+function bufferToB64url(b: Buffer): string {
+  return b.toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+/**
+ * Firma una clave de licencia con la clave PRIVADA (usa esto SOLO donde
+ * tengas la clave privada disponible: el script `generate-license-key.ts`
+ * en tu máquina, o el panel /creador de TU propia instalación si le pusiste
+ * la variable de entorno `LICENSE_SIGNING_PRIVATE_KEY`). Nunca se usa en
+ * las instalaciones de tus clientes.
+ */
+export function signLicenseKey(label: string, privateKeyPem: string): string {
+  const payload: LicensePayload = { sub: label, iat: Math.floor(Date.now() / 1000) };
+  const payloadBuf = Buffer.from(JSON.stringify(payload), "utf8");
+  const signature = sign(null, payloadBuf, privateKeyPem);
+  return `${bufferToB64url(payloadBuf)}.${bufferToB64url(signature)}`;
 }
 
 /** Comprueba la firma de una clave de licencia (formato "payload.firma", ambos en base64url). */

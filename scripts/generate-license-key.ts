@@ -5,6 +5,10 @@
  * Uso:
  *   node --experimental-strip-types scripts/generate-license-key.ts <archivo-clave-privada.pem> "<etiqueta, ej. email del cliente>"
  *
+ * Alternativa más cómoda: si en TU instalación de referencia configuras la
+ * variable de entorno `LICENSE_SIGNING_PRIVATE_KEY`, aparece un generador
+ * directamente en /creador — no hace falta ni terminal ni este script.
+ *
  * La clave privada es la que te mostró Claude una única vez al crear el
  * sistema de licencias. Guárdala en un gestor de contraseñas y, si quieres
  * tenerla también en un archivo local para usar este script, ponla en un
@@ -12,11 +16,7 @@
  * nombre ya está en `.gitignore`, así que nunca se subirá por accidente.
  */
 import { readFileSync } from "node:fs";
-import { sign } from "node:crypto";
-
-function bufferToB64url(b: Buffer): string {
-  return b.toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-}
+import { signLicenseKey } from "../src/lib/license/crypto.ts";
 
 function main() {
   const [, , keyPath, label] = process.argv;
@@ -28,11 +28,7 @@ function main() {
   }
 
   const privateKeyPem = readFileSync(keyPath, "utf8");
-  const payload = { sub: label, iat: Math.floor(Date.now() / 1000) };
-  const payloadBuf = Buffer.from(JSON.stringify(payload), "utf8");
-  const signature = sign(null, payloadBuf, privateKeyPem);
-
-  const licenseKey = `${bufferToB64url(payloadBuf)}.${bufferToB64url(signature)}`;
+  const licenseKey = signLicenseKey(label, privateKeyPem);
 
   console.log("\nClave de licencia (pégasela al cliente / o pégala tú en su panel de Creador):\n");
   console.log(licenseKey);

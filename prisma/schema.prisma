@@ -108,6 +108,16 @@ model LicensePaymentClaim {
   @@index([status])
 }
 
+/// Registro (solo en la instalación de referencia del creador) de las claves
+/// de licencia generadas desde /creador, para llevar la cuenta de a quién
+/// ya se le entregó una.
+model IssuedLicense {
+  id        String   @id @default(cuid())
+  label     String // referencia del cliente (email, nombre, etc.)
+  key       String
+  createdAt DateTime @default(now())
+}
+
 /// Producto o servicio del catálogo del negocio. La IA se apoya en estos
 /// datos para entender qué vende el negocio (varía según el nicho).
 model Product {

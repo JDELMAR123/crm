@@ -4,7 +4,13 @@ import { prisma } from "@/lib/prisma";
 import { getSettings, getSettingsRow } from "@/lib/settings";
 import { APP_VERSION } from "@/lib/version";
 import { ModulesForm, NoticeForm } from "./_components/ControlForms";
-import { LicenseConfigForm, LicenseKeyForm, LicenseClaimsList } from "./_components/LicenseForms";
+import {
+  LicenseConfigForm,
+  LicenseKeyForm,
+  LicenseClaimsList,
+  LicenseGeneratorForm,
+  IssuedLicensesList,
+} from "./_components/LicenseForms";
 
 export const dynamic = "force-dynamic";
 
@@ -22,7 +28,11 @@ function Row({ label, value, ok }: { label: string; value: string; ok?: boolean 
 export default async function CreadorPage() {
   await requireCreator();
 
-  const [settings, row, counts, migrations, host, claims] = await Promise.all([
+  // Solo tu propia instalación (la que tenga esta env var) puede generar
+  // claves de licencia — en las de tus clientes no aparece.
+  const canGenerateLicenses = Boolean(process.env.LICENSE_SIGNING_PRIVATE_KEY);
+
+  const [settings, row, counts, migrations, host, claims, issuedLicenses] = await Promise.all([
     getSettings(),
     getSettingsRow(),
     Promise.all([
@@ -37,6 +47,9 @@ export default async function CreadorPage() {
       .catch(() => -1),
     headers().then((h) => h.get("host") ?? "desconocido"),
     prisma.licensePaymentClaim.findMany({ orderBy: { createdAt: "desc" }, take: 20 }),
+    canGenerateLicenses
+      ? prisma.issuedLicense.findMany({ orderBy: { createdAt: "desc" }, take: 20 })
+      : Promise.resolve([]),
   ]);
 
   const [users, contacts, conversations, messages] = counts;
@@ -129,6 +142,12 @@ export default async function CreadorPage() {
       )}
       {settings.license.enabled && !settings.license.paid && (
         <LicenseClaimsList claims={claims} />
+      )}
+      {canGenerateLicenses && (
+        <>
+          <LicenseGeneratorForm />
+          <IssuedLicensesList licenses={issuedLicenses} />
+        </>
       )}
 
       <ModulesForm disabled={settings.disabledModules} />

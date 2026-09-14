@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import {
   saveLicenseConfig,
   saveLicenseKey,
+  generateLicenseKey,
   approveLicenseClaim,
   rejectLicenseClaim,
   type CreatorState,
@@ -135,6 +136,80 @@ export function LicenseKeyForm({
         <Status state={state} />
       </div>
     </form>
+  );
+}
+
+/**
+ * Genera una clave de licencia con un clic, sin terminal — solo aparece
+ * cuando esta instalación tiene configurada tu clave privada de firma.
+ */
+export function LicenseGeneratorForm() {
+  const [state, action, pending] = useActionState(generateLicenseKey, {});
+
+  return (
+    <section className="space-y-3 rounded-lg border border-black/10 p-5 dark:border-white/10">
+      <h2 className="font-medium">Generar clave de licencia</h2>
+      <p className="text-sm opacity-60">
+        Escribe una referencia del cliente (su email, por ejemplo) y genera
+        su clave aquí mismo. Luego pégala en la sección &quot;Clave de
+        licencia&quot; del panel de Creador de su instalación, o mándasela
+        para que la pegue él mismo en <code>/licencia</code>.
+      </p>
+      <form action={action} className="flex flex-col gap-2 sm:flex-row">
+        <input
+          name="label"
+          placeholder="cliente@ejemplo.com"
+          className={field}
+        />
+        <button
+          type="submit"
+          disabled={pending}
+          className="shrink-0 rounded-md bg-brand px-4 py-2 text-sm text-brand-contrast disabled:opacity-50"
+        >
+          {pending ? "Generando…" : "Generar clave"}
+        </button>
+      </form>
+      {state.error && (
+        <p className="text-sm text-red-600 dark:text-red-400">{state.error}</p>
+      )}
+      {state.key && (
+        <div className="space-y-1">
+          <span className="text-xs opacity-60">
+            Clave generada — selecciónala y cópiala:
+          </span>
+          <textarea
+            readOnly
+            rows={3}
+            value={state.key}
+            onFocus={(e) => e.currentTarget.select()}
+            className={`${field} font-mono text-xs`}
+          />
+        </div>
+      )}
+    </section>
+  );
+}
+
+export function IssuedLicensesList({
+  licenses,
+}: {
+  licenses: { id: string; label: string; createdAt: Date }[];
+}) {
+  if (licenses.length === 0) return null;
+  return (
+    <section className="space-y-2 rounded-lg border border-black/10 p-5 dark:border-white/10">
+      <h2 className="font-medium">Claves generadas</h2>
+      <ul className="space-y-1 text-sm">
+        {licenses.map((l) => (
+          <li key={l.id} className="flex items-center justify-between">
+            <span>{l.label}</span>
+            <span className="text-xs opacity-50">
+              {l.createdAt.toLocaleDateString("es-ES")}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }
 

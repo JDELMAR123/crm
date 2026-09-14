@@ -4,10 +4,11 @@ import { revalidatePath } from "next/cache";
 import { requireCreator } from "@/lib/creator";
 import { prisma } from "@/lib/prisma";
 import { updateSettings } from "@/lib/settings";
-import { verifyLicenseKey } from "@/lib/license/crypto";
+import { verifyLicenseKey, signLicenseKey } from "@/lib/license/crypto";
 import type { ModuleName } from "@/lib/settings";
 
 export type CreatorState = { ok?: boolean; error?: string };
+export type GenerateLicenseState = { ok?: boolean; error?: string; key?: string };
 
 const ALL_MODULES: ModuleName[] = ["inbox", "pipeline", "ia"];
 
@@ -108,6 +109,39 @@ export async function saveLicenseKey(
   revalidatePath("/", "layout");
   revalidatePath("/licencia");
   return { ok: true };
+}
+
+/**
+ * Genera una clave de licencia desde el propio panel, sin terminal.
+ * Solo funciona en la instalación donde configures la variable de entorno
+ * `LICENSE_SIGNING_PRIVATE_KEY` (tu clave privada) — normalmente solo tu
+ * instalación de referencia. En las de tus clientes no existe esa
+ * variable, así que ahí este botón simplemente no aparece.
+ */
+export async function generateLicenseKey(
+  _prev: GenerateLicenseState,
+  formData: FormData
+): Promise<GenerateLicenseState> {
+  await requireCreator();
+
+  const privateKeyPem = process.env.LICENSE_SIGNING_PRIVATE_KEY?.replace(/\\n/g, "\n");
+  if (!privateKeyPem) {
+    return { error: "Falta configurar LICENSE_SIGNING_PRIVATE_KEY en esta instalación." };
+  }
+
+  const label = String(formData.get("label") ?? "").trim();
+  if (!label) return { error: "Pon una referencia del cliente (email o nombre)." };
+
+  let key: string;
+  try {
+    key = signLicenseKey(label, privateKeyPem);
+  } catch {
+    return { error: "La clave privada configurada no es válida." };
+  }
+
+  await prisma.issuedLicense.create({ data: { label, key } });
+  revalidatePath("/creador");
+  return { ok: true, key };
 }
 
 /** Rechaza un comprobante; el comprador puede volver a intentarlo desde /licencia. */
