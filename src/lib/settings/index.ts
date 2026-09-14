@@ -7,6 +7,8 @@ import {
   DEFAULT_BUSINESS_CONTEXT,
   DEFAULT_BUSINESS_NAME,
   DEFAULT_COLOR_WORDS,
+  DEFAULT_LICENSE_ENABLED,
+  DEFAULT_LICENSE_INSTRUCTIONS,
 } from "./defaults";
 
 export type ResolvedSettings = {
@@ -94,6 +96,8 @@ async function loadRow(): Promise<NonNullable<SettingsRow>> {
         aiModel: DEFAULT_AI_MODEL,
         aiBusinessContext: DEFAULT_BUSINESS_CONTEXT,
         colorWords: JSON.stringify(DEFAULT_COLOR_WORDS),
+        // Instalación nueva = cobro activado por defecto (ver defaults.ts).
+        licenseEnabled: DEFAULT_LICENSE_ENABLED,
       },
     });
   }
@@ -141,12 +145,16 @@ export const getSettings = cache(async (): Promise<ResolvedSettings> => {
     license: (() => {
       const verified = row.licenseKey ? verifyLicenseKey(row.licenseKey) : { valid: false as const };
       const paid = verified.valid;
+      const locked = row.licenseEnabled && !paid;
       return {
         enabled: row.licenseEnabled,
         paid,
-        locked: row.licenseEnabled && !paid,
+        locked,
         priceLabel: row.licensePriceLabel?.trim() || null,
-        instructions: row.licensePaymentInstructions?.trim() || null,
+        // Si está bloqueada y el creador aún no puso instrucciones propias,
+        // que al menos diga a quién contactar en vez de mostrar un hueco vacío.
+        instructions:
+          row.licensePaymentInstructions?.trim() || (locked ? DEFAULT_LICENSE_INSTRUCTIONS : null),
         key: row.licenseKey || null,
         keyLabel: verified.valid ? verified.payload.sub : null,
       };

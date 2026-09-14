@@ -19,3 +19,16 @@ export const DEFAULT_COLOR_WORDS = [
   "negro", "blanco", "gris", "azul", "rojo", "verde", "amarillo", "rosa",
   "morado", "naranja", "marron", "beige", "granate", "celeste", "turquesa",
 ];
+
+/**
+ * Toda instalación NUEVA arranca con el cobro de licencia activado (aunque
+ * sin precio ni instrucciones todavía) — así un despliegue que nadie
+ * configuró a tiempo no se queda abierto y gratis por descuido. El creador
+ * lo desactiva explícitamente en /creador si esa instalación en concreto no
+ * debe cobrar (p. ej. su propia instancia de referencia).
+ */
+export const DEFAULT_LICENSE_ENABLED = true;
+
+/** Mensaje que ve el comprador si el creador todavía no puso instrucciones de pago. */
+export const DEFAULT_LICENSE_INSTRUCTIONS =
+  "Contacta a quien te vendió este CRM para completar el pago y recibir tu clave de licencia.";
